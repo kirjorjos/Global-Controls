@@ -1,12 +1,14 @@
 package net.globalcontrols.platform.api;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface ControlPlatform {
     Collection<ControlInfo> getControls();
 
-    /** @param modifierCode GLFW code of modifier key, or -1 for none */
-    void setKey(String translationKey, int keyCode, int modifierCode);
+    /** Accepts a full combo list (e.g. [340, 82] for LSHIFT+R).
+     *  Platform should sync to vanilla KeyMapping for display compatibility. */
+    void setKey(String translationKey, List<Integer> glfwCodes);
 
     void unsetKey(String translationKey);
 }

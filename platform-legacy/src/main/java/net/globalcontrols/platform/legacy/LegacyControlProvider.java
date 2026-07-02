@@ -5,6 +5,7 @@ import net.globalcontrols.platform.api.ControlPlatform;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 public class LegacyControlProvider implements ControlPlatform {
     @Override
@@ -14,8 +15,10 @@ public class LegacyControlProvider implements ControlPlatform {
     }
 
     @Override
-    public void setKey(String translationKey, int keyCode, int modifierCode) {
-        // TODO: find KeyBinding by description, set keyCode, call KeyBinding.resetKeyBindingArrayAndHash()
+    public void setKey(String translationKey, List<Integer> glfwCodes) {
+        // TODO: find KeyBinding by description
+        //       set keyCode to the last GLFW code (translated to LWJGL2 if needed)
+        //       call KeyBinding.resetKeyBindingArrayAndHash()
     }
 
     @Override

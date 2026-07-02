@@ -43,6 +43,11 @@ public class ForgeEntrypoint {
             public ConfigDirProvider configDir() {
                 return () -> java.nio.file.Paths.get("config");
             }
+
+            @Override
+            public void fireKeyAction(String translationKey) {
+                // TODO: look up KeyBinding by translationKey, call KeyBinding.onPress() or simulate press
+            }
         };
     }
 }

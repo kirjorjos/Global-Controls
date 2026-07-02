@@ -9,8 +9,7 @@ import net.globalcontrols.platform.api.PlatformServices;
 import net.globalcontrols.platform.api.command.*;
 
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -22,6 +21,7 @@ public final class CommandTreeBuilder {
 
     public static CommandDefinition build(
         ConfigData config,
+        ControlService controlService,
         PlatformServices services,
         Supplier<List<String>> modSuggestions,
         Supplier<List<String>> controlSuggestions
@@ -29,7 +29,6 @@ public final class CommandTreeBuilder {
         GlobalProfileService profile = new GlobalProfileService(
             Paths.get(config.globalControlsFilePath())
         );
-        ControlService controlService = new ControlService(services.controls());
         Supplier<List<String>> allModIds = () -> services.mods().getInstalledMods().stream()
             .map(InstalledMod::id).toList();
 
@@ -72,7 +71,7 @@ public final class CommandTreeBuilder {
                 .filter(c -> c.translationKey().startsWith("key." + modId))
                 .collect(Collectors.toMap(
                     c -> c.translationKey(),
-                    c -> KeyNames.formatCombo(List.of(c.keyCode()))
+                    c -> KeyNames.formatCombo(c.glfwCodes())
                 ));
             if (!controls.isEmpty()) {
                 data.put(modId, controls);
@@ -88,7 +87,7 @@ public final class CommandTreeBuilder {
             .filter(c -> c.translationKey().startsWith("key." + modId))
             .collect(Collectors.toMap(
                 c -> c.translationKey(),
-                c -> KeyNames.formatCombo(List.of(c.keyCode()))
+                c -> KeyNames.formatCombo(c.glfwCodes())
             ));
         Map<String, Map<String, String>> data = profile.load();
         data.put(modId, controls);
@@ -101,7 +100,7 @@ public final class CommandTreeBuilder {
         String combo = controlService.getAllControls().stream()
             .filter(c -> c.translationKey().equals(controlId))
             .findFirst()
-            .map(c -> KeyNames.formatCombo(List.of(c.keyCode())))
+            .map(c -> KeyNames.formatCombo(c.glfwCodes()))
             .orElse("");
         Map<String, Map<String, String>> data = profile.load();
         data.computeIfAbsent(args.get(0), k -> new java.util.HashMap<>()).put(controlId, combo);

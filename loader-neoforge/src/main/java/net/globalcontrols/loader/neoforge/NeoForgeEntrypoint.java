@@ -38,6 +38,11 @@ public class NeoForgeEntrypoint {
             public ConfigDirProvider configDir() {
                 return () -> java.nio.file.Paths.get("config");
             }
+
+            @Override
+            public void fireKeyAction(String translationKey) {
+                // TODO: look up KeyMapping by translationKey, call KeyMapping.click() or simulate
+            }
         };
     }
 }

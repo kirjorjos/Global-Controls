@@ -9,9 +9,11 @@ import java.util.List;
 
 public class ControlService {
     private final ControlPlatform controlPlatform;
+    private final BindingRegistry bindingRegistry;
 
-    public ControlService(ControlPlatform controlPlatform) {
+    public ControlService(ControlPlatform controlPlatform, BindingRegistry bindingRegistry) {
         this.controlPlatform = controlPlatform;
+        this.bindingRegistry = bindingRegistry;
     }
 
     public Collection<ControlInfo> getAllControls() {
@@ -20,15 +22,20 @@ public class ControlService {
 
     public void applyCombo(String translationKey, List<Integer> codes) {
         if (codes.isEmpty()) {
+            bindingRegistry.unregister(translationKey);
             controlPlatform.unsetKey(translationKey);
         } else {
-            int mainKey = KeyNames.extractMainKey(codes);
-            int modifier = KeyNames.extractModifier(codes);
-            controlPlatform.setKey(translationKey, mainKey, modifier);
+            bindingRegistry.register(translationKey, codes);
+            controlPlatform.setKey(translationKey, codes);
         }
     }
 
     public void unset(String translationKey) {
+        bindingRegistry.unregister(translationKey);
         controlPlatform.unsetKey(translationKey);
+    }
+
+    public BindingRegistry getBindingRegistry() {
+        return bindingRegistry;
     }
 }

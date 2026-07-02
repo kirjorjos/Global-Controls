@@ -19,3 +19,14 @@ subprojects {
         mavenCentral()
     }
 }
+
+tasks.register("buildAll") {
+    description = "Build all loader variants for all Minecraft versions"
+    dependsOn(
+        ":loader-forge:buildForgeAll",
+        ":loader-fabric:buildFabricAll",
+        ":loader-neoforge:buildNeoForgeAll",
+        ":loader-quilt:buildQuiltAll"
+    )
+    group = "build"
+}

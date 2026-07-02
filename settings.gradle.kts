@@ -1,3 +1,13 @@
+pluginManagement {
+    repositories {
+        maven {
+            url = uri("https://maven.wagyourtail.xyz/releases")
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = "GlobalControls"
 
 include(

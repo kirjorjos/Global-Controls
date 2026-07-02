@@ -4,6 +4,7 @@ import net.globalcontrols.common.config.ConfigData;
 import net.globalcontrols.common.model.KeyNames;
 import net.globalcontrols.common.service.ControlService;
 import net.globalcontrols.common.service.GlobalProfileService;
+import net.globalcontrols.platform.api.ExternalControlHandler;
 import net.globalcontrols.platform.api.InstalledMod;
 import net.globalcontrols.platform.api.PlatformServices;
 import net.globalcontrols.platform.api.command.*;
@@ -29,33 +30,34 @@ public final class CommandTreeBuilder {
         GlobalProfileService profile = new GlobalProfileService(
             Paths.get(config.globalControlsFilePath())
         );
+        List<ExternalControlHandler> externalHandlers = services.externalHandlers();
         Supplier<List<String>> allModIds = () -> services.mods().getInstalledMods().stream()
             .map(InstalledMod::id).toList();
 
         var pushAll = new LiteralNode("all", List.of(),
-            args -> pushAllMods(profile, controlService, allModIds));
+            args -> pushAllMods(profile, controlService, externalHandlers, allModIds));
         var pushControlArg = new ArgumentNode<String>("control", controlSuggestions,
-            List.of(), args -> pushSingle(profile, controlService, args));
+            List.of(), args -> pushSingle(profile, controlService, externalHandlers, args));
         var pushModBranch = new ArgumentNode<String>("mod", allModIds, List.of(
-            new LiteralNode("all", List.of(), args -> pushAllForMod(profile, controlService, args)),
+            new LiteralNode("all", List.of(), args -> pushAllForMod(profile, controlService, externalHandlers, args)),
             pushControlArg
-        ), args -> pushAllForMod(profile, controlService, args));
+        ), args -> pushAllForMod(profile, controlService, externalHandlers, args));
         var push = new LiteralNode("push", List.of(pushAll, pushModBranch));
 
         var loadAll = new LiteralNode("all", List.of(),
-            args -> loadAllMods(profile, controlService, allModIds));
+            args -> loadAllMods(profile, controlService, externalHandlers, allModIds));
         var loadControlArg = new ArgumentNode<String>("control", controlSuggestions,
-            List.of(), args -> loadSingle(profile, controlService, args));
+            List.of(), args -> loadSingle(profile, controlService, externalHandlers, args));
         var loadModBranch = new ArgumentNode<String>("mod", allModIds, List.of(
-            new LiteralNode("all", List.of(), args -> loadAllForMod(profile, controlService, args)),
+            new LiteralNode("all", List.of(), args -> loadAllForMod(profile, controlService, externalHandlers, args)),
             loadControlArg
-        ), args -> loadAllForMod(profile, controlService, args));
+        ), args -> loadAllForMod(profile, controlService, externalHandlers, args));
         var load = new LiteralNode("load", List.of(loadAll, loadModBranch));
 
         var setKeyArg = new ArgumentNode<String>("key", () -> List.of(),
-            List.of(), args -> handleSet(profile, controlService, args));
+            List.of(), args -> handleSet(profile, controlService, externalHandlers, args));
         var setControlArg = new ArgumentNode<String>("control", controlSuggestions,
-            List.of(setKeyArg), args -> handleSet(profile, controlService, args));
+            List.of(setKeyArg), args -> handleSet(profile, controlService, externalHandlers, args));
         var setModArg = new ArgumentNode<String>("mod", allModIds,
             List.of(setControlArg));
         var set = new LiteralNode("set", List.of(setModArg));
@@ -64,92 +66,141 @@ public final class CommandTreeBuilder {
         return new RootNode(List.of(globalcontrols));
     }
 
-    private static void pushAllMods(GlobalProfileService profile, ControlService controlService, Supplier<List<String>> allModIds) {
+    private static ExternalControlHandler findHandler(List<ExternalControlHandler> handlers, String modId) {
+        return handlers.stream().filter(h -> h.modId().equals(modId)).findFirst().orElse(null);
+    }
+
+    private static void pushAllMods(GlobalProfileService profile, ControlService controlService,
+                                    List<ExternalControlHandler> extHandlers, Supplier<List<String>> allModIds) {
         Map<String, Map<String, String>> data = profile.load();
         for (String modId : allModIds.get()) {
-            Map<String, String> controls = controlService.getAllControls().stream()
-                .filter(c -> c.translationKey().startsWith("key." + modId))
-                .collect(Collectors.toMap(
-                    c -> c.translationKey(),
-                    c -> KeyNames.formatCombo(c.glfwCodes())
-                ));
-            if (!controls.isEmpty()) {
-                data.put(modId, controls);
+            ExternalControlHandler handler = findHandler(extHandlers, modId);
+            if (handler != null) {
+                data.put(modId, handler.readControls());
+            } else {
+                Map<String, String> controls = controlService.getAllControls().stream()
+                    .filter(c -> c.translationKey().startsWith("key." + modId))
+                    .collect(Collectors.toMap(c -> c.translationKey(), c -> KeyNames.formatCombo(c.glfwCodes())));
+                if (!controls.isEmpty()) data.put(modId, controls);
             }
         }
         profile.save(data);
-        LOG.info("Pushed all controls for all mods");
+        LOG.info("Pushed all controls");
     }
 
-    private static void pushAllForMod(GlobalProfileService profile, ControlService controlService, List<String> args) {
+    private static void pushAllForMod(GlobalProfileService profile, ControlService controlService,
+                                      List<ExternalControlHandler> extHandlers, List<String> args) {
         String modId = args.get(0);
-        Map<String, String> controls = controlService.getAllControls().stream()
-            .filter(c -> c.translationKey().startsWith("key." + modId))
-            .collect(Collectors.toMap(
-                c -> c.translationKey(),
-                c -> KeyNames.formatCombo(c.glfwCodes())
-            ));
+        ExternalControlHandler handler = findHandler(extHandlers, modId);
+        Map<String, String> controls;
+        if (handler != null) {
+            controls = handler.readControls();
+        } else {
+            controls = controlService.getAllControls().stream()
+                .filter(c -> c.translationKey().startsWith("key." + modId))
+                .collect(Collectors.toMap(c -> c.translationKey(), c -> KeyNames.formatCombo(c.glfwCodes())));
+        }
         Map<String, Map<String, String>> data = profile.load();
         data.put(modId, controls);
         profile.save(data);
-        LOG.info("Pushed controls for mod " + modId);
+        LOG.info("Pushed mod " + modId);
     }
 
-    private static void pushSingle(GlobalProfileService profile, ControlService controlService, List<String> args) {
+    private static void pushSingle(GlobalProfileService profile, ControlService controlService,
+                                   List<ExternalControlHandler> extHandlers, List<String> args) {
+        String modId = args.get(0);
         String controlId = args.get(1);
-        String combo = controlService.getAllControls().stream()
-            .filter(c -> c.translationKey().equals(controlId))
-            .findFirst()
-            .map(c -> KeyNames.formatCombo(c.glfwCodes()))
-            .orElse("");
+        ExternalControlHandler handler = findHandler(extHandlers, modId);
+        String combo;
+        if (handler != null) {
+            combo = handler.readControls().getOrDefault(controlId, "");
+        } else {
+            combo = controlService.getAllControls().stream()
+                .filter(c -> c.translationKey().equals(controlId))
+                .findFirst()
+                .map(c -> KeyNames.formatCombo(c.glfwCodes()))
+                .orElse("");
+        }
         Map<String, Map<String, String>> data = profile.load();
-        data.computeIfAbsent(args.get(0), k -> new java.util.HashMap<>()).put(controlId, combo);
+        data.computeIfAbsent(modId, k -> new HashMap<>()).put(controlId, combo);
         profile.save(data);
         LOG.info("Pushed control " + controlId);
     }
 
-    private static void loadAllMods(GlobalProfileService profile, ControlService controlService, Supplier<List<String>> allModIds) {
+    private static void loadAllMods(GlobalProfileService profile, ControlService controlService,
+                                    List<ExternalControlHandler> extHandlers, Supplier<List<String>> allModIds) {
         Map<String, Map<String, String>> data = profile.load();
         for (Map.Entry<String, Map<String, String>> modEntry : data.entrySet()) {
             if (!allModIds.get().contains(modEntry.getKey())) continue;
-            for (Map.Entry<String, String> controlEntry : modEntry.getValue().entrySet()) {
-                List<Integer> codes = KeyNames.parseCombo(controlEntry.getValue());
-                controlService.applyCombo(controlEntry.getKey(), codes);
-            }
+            applyModBindings(modEntry.getKey(), modEntry.getValue(), controlService, extHandlers);
         }
-        LOG.info("Loaded controls for all mods");
+        LOG.info("Loaded all controls");
     }
 
-    private static void loadAllForMod(GlobalProfileService profile, ControlService controlService, List<String> args) {
+    private static void loadAllForMod(GlobalProfileService profile, ControlService controlService,
+                                      List<ExternalControlHandler> extHandlers, List<String> args) {
         String modId = args.get(0);
         Map<String, Map<String, String>> data = profile.load();
         Map<String, String> modEntries = data.get(modId);
         if (modEntries == null) return;
-        for (Map.Entry<String, String> entry : modEntries.entrySet()) {
-            List<Integer> codes = KeyNames.parseCombo(entry.getValue());
-            controlService.applyCombo(entry.getKey(), codes);
-        }
-        LOG.info("Loaded controls for mod " + modId);
+        applyModBindings(modId, modEntries, controlService, extHandlers);
+        LOG.info("Loaded mod " + modId);
     }
 
-    private static void loadSingle(GlobalProfileService profile, ControlService controlService, List<String> args) {
+    private static void loadSingle(GlobalProfileService profile, ControlService controlService,
+                                   List<ExternalControlHandler> extHandlers, List<String> args) {
         String controlId = args.get(1);
         Map<String, Map<String, String>> data = profile.load();
         Map<String, String> modEntries = data.get(args.get(0));
         if (modEntries == null || !modEntries.containsKey(controlId)) return;
-        List<Integer> codes = KeyNames.parseCombo(modEntries.get(controlId));
-        controlService.applyCombo(controlId, codes);
+        applySingleBinding(args.get(0), controlId, modEntries.get(controlId), controlService, extHandlers);
         LOG.info("Loaded control " + controlId);
     }
 
-    private static void handleSet(GlobalProfileService profile, ControlService controlService, List<String> args) {
+    private static void applyModBindings(String modId, Map<String, String> entries,
+                                         ControlService controlService, List<ExternalControlHandler> extHandlers) {
+        ExternalControlHandler handler = findHandler(extHandlers, modId);
+        if (handler != null) {
+            Map<String, Integer> parsed = new LinkedHashMap<>();
+            for (Map.Entry<String, String> entry : entries.entrySet()) {
+                List<Integer> codes = KeyNames.parseCombo(entry.getValue());
+                if (!codes.isEmpty()) parsed.put(entry.getKey(), codes.get(codes.size() - 1));
+            }
+            handler.writeControls(parsed);
+        } else {
+            for (Map.Entry<String, String> entry : entries.entrySet()) {
+                List<Integer> codes = KeyNames.parseCombo(entry.getValue());
+                controlService.applyCombo(entry.getKey(), codes);
+            }
+        }
+    }
+
+    private static void applySingleBinding(String modId, String controlId, String keyName,
+                                           ControlService controlService, List<ExternalControlHandler> extHandlers) {
+        ExternalControlHandler handler = findHandler(extHandlers, modId);
+        List<Integer> codes = KeyNames.parseCombo(keyName);
+        int mainKey = codes.isEmpty() ? -1 : codes.get(codes.size() - 1);
+        if (handler != null && mainKey >= 0) {
+            handler.writeControl(controlId, mainKey);
+        } else if (mainKey >= 0) {
+            controlService.applyCombo(controlId, codes);
+        }
+    }
+
+    private static void handleSet(GlobalProfileService profile, ControlService controlService,
+                                  List<ExternalControlHandler> extHandlers, List<String> args) {
         String mod = args.get(0);
         String control = args.get(1);
         String key = args.size() > 2 ? args.get(2) : null;
         if (key == null || key.isEmpty()) {
             profile.removeEntry(mod, control);
-            controlService.unset(control);
-            LOG.info("Unset control " + control + " for mod " + mod);
+            ExternalControlHandler handler = findHandler(extHandlers, mod);
+            if (handler != null) {
+                handler.writeControl(control, -1);
+            } else {
+                controlService.unset(control);
+            }
+            LOG.info("Unset " + control + " for mod " + mod);
         } else {
             List<Integer> codes = KeyNames.parseCombo(key);
             if (codes.isEmpty()) {
@@ -157,8 +208,14 @@ public final class CommandTreeBuilder {
                 return;
             }
             profile.setEntry(mod, control, key);
-            controlService.applyCombo(control, codes);
-            LOG.info("Set control " + control + " for mod " + mod + " to " + key);
+            int mainKey = codes.get(codes.size() - 1);
+            ExternalControlHandler handler = findHandler(extHandlers, mod);
+            if (handler != null) {
+                handler.writeControl(control, mainKey);
+            } else {
+                controlService.applyCombo(control, codes);
+            }
+            LOG.info("Set " + control + " for mod " + mod + " to " + key);
         }
     }
 }

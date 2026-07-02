@@ -1,17 +1,18 @@
 package net.globalcontrols.loader.forge;
 
 import net.globalcontrols.common.bootstrap.ModBootstrap;
-import net.globalcontrols.platform.api.PlatformServices;
-import net.globalcontrols.platform.api.CommandPlatform;
-import net.globalcontrols.platform.api.ControlPlatform;
-import net.globalcontrols.platform.api.ModPlatform;
-import net.globalcontrols.platform.api.ConfigDirProvider;
+import net.globalcontrols.platform.api.*;
 import net.globalcontrols.platform.legacy.LegacyCommandAdapter;
 import net.globalcontrols.platform.legacy.LegacyControlProvider;
 import net.globalcontrols.platform.legacy.LegacyModProvider;
+import net.globalcontrols.platform.legacy.handler.NeiHandler;
 import net.globalcontrols.platform.brigadier.BrigadierCommandAdapter;
 import net.globalcontrols.platform.brigadier.BrigadierControlProvider;
 import net.globalcontrols.platform.brigadier.BrigadierModProvider;
+import net.globalcontrols.platform.brigadier.handler.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 // TODO: annotate with @Mod("globalcontrols") and appropriate Forge entrypoint
 public class ForgeEntrypoint {
@@ -53,6 +54,20 @@ public class ForgeEntrypoint {
             public String minecraftVersion() {
                 // TODO: once compiled against real MC: return ForgeVersion.getMCVersion() or Loader.getMCVersionString()
                 return "1.12.2";
+            }
+
+            @Override
+            public List<ExternalControlHandler> externalHandlers() {
+                java.nio.file.Path dir = configDir().getConfigDirectory();
+                String mcVer = minecraftVersion();
+                List<ExternalControlHandler> handlers = new ArrayList<>();
+                handlers.add(new NeiHandler(dir, mcVer));
+                // On Forge 1.13+ JEI is available via Brigadier
+                if (!mcVer.startsWith("1.7.") && !mcVer.startsWith("1.8.") && !mcVer.startsWith("1.10.")) {
+                    handlers.add(new JeiHandler(dir));
+                    handlers.add(new ReiHandler(dir));
+                }
+                return handlers;
             }
         };
     }

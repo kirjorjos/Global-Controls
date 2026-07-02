@@ -1,14 +1,13 @@
 package net.globalcontrols.loader.quilt;
 
 import net.globalcontrols.common.bootstrap.ModBootstrap;
-import net.globalcontrols.platform.api.PlatformServices;
-import net.globalcontrols.platform.api.CommandPlatform;
-import net.globalcontrols.platform.api.ControlPlatform;
-import net.globalcontrols.platform.api.ModPlatform;
-import net.globalcontrols.platform.api.ConfigDirProvider;
+import net.globalcontrols.platform.api.*;
 import net.globalcontrols.platform.brigadier.BrigadierCommandAdapter;
 import net.globalcontrols.platform.brigadier.BrigadierControlProvider;
 import net.globalcontrols.platform.brigadier.BrigadierModProvider;
+import net.globalcontrols.platform.brigadier.handler.*;
+
+import java.util.List;
 
 // TODO: implement Quilt ModInitializer
 public class QuiltEntrypoint {
@@ -48,6 +47,16 @@ public class QuiltEntrypoint {
             public String minecraftVersion() {
                 // TODO: once compiled against real MC: return net.minecraft.SharedConstants.getReleaseVersion()
                 return "1.21";
+            }
+
+            @Override
+            public List<ExternalControlHandler> externalHandlers() {
+                java.nio.file.Path dir = configDir().getConfigDirectory();
+                return List.of(
+                    new JeiHandler(dir),
+                    new EmiHandler(dir),
+                    new ReiHandler(dir)
+                );
             }
         };
     }

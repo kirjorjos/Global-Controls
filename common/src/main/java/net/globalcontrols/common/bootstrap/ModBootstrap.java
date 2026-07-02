@@ -36,6 +36,12 @@ public final class ModBootstrap {
                 configManager.save(config);
             }
 
+            if (!config.firstLaunchCompleted()) {
+                config = new ConfigData(config.globalControlsFilePath(), true);
+                configManager.save(config);
+                LOG.info("First launch completed — global controls profile ready");
+            }
+
             BindingRegistry registry = new BindingRegistry();
             ControlService controlService = new ControlService(services.controls(), registry);
 
@@ -56,6 +62,6 @@ public final class ModBootstrap {
     }
 
     private static String detectMcVersion(PlatformServices services) {
-        return "unknown";
+        return services.minecraftVersion();
     }
 }

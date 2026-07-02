@@ -9,4 +9,7 @@ public interface PlatformServices {
     /** Fire a Minecraft keybinding action by translation key.
      *  Called by {@code KeyStateTracker} when a combo match is found. */
     void fireKeyAction(String translationKey);
+
+    /** The running Minecraft version string (e.g. "1.21", "1.12.2"). */
+    String minecraftVersion();
 }

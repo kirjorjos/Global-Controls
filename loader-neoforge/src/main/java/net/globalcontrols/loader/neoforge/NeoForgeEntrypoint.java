@@ -43,6 +43,12 @@ public class NeoForgeEntrypoint {
             public void fireKeyAction(String translationKey) {
                 // TODO: look up KeyMapping by translationKey, call KeyMapping.click() or simulate
             }
+
+            @Override
+            public String minecraftVersion() {
+                // TODO: once compiled against real MC: return net.minecraft.SharedConstants.getReleaseVersion()
+                return "1.21";
+            }
         };
     }
 }

@@ -48,6 +48,12 @@ public class ForgeEntrypoint {
             public void fireKeyAction(String translationKey) {
                 // TODO: look up KeyBinding by translationKey, call KeyBinding.onPress() or simulate press
             }
+
+            @Override
+            public String minecraftVersion() {
+                // TODO: once compiled against real MC: return ForgeVersion.getMCVersion() or Loader.getMCVersionString()
+                return "1.12.2";
+            }
         };
     }
 }

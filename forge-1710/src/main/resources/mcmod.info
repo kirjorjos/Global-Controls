@@ -1,0 +1,7 @@
+[{
+  "modid": "globalcontrols",
+  "name": "GlobalControls",
+  "version": "1.0.0",
+  "description": "Global keybind profile across modpacks",
+  "mcversion": "1.7.10"
+}]

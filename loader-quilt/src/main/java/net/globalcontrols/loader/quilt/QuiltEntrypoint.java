@@ -5,19 +5,28 @@ import net.globalcontrols.platform.api.*;
 import net.globalcontrols.platform.brigadier.BrigadierCommandAdapter;
 import net.globalcontrols.platform.brigadier.BrigadierControlProvider;
 import net.globalcontrols.platform.brigadier.BrigadierModProvider;
-import net.globalcontrols.platform.brigadier.handler.*;
+import net.globalcontrols.platform.brigadier.handler.EmiHandler;
+import net.globalcontrols.platform.brigadier.handler.JeiHandler;
+import net.globalcontrols.platform.brigadier.handler.ReiHandler;
+import org.quiltmc.loader.api.ModContainer;
+import org.quiltmc.loader.api.QuiltLoader;
 
+import java.nio.file.Path;
 import java.util.List;
 
-// TODO: implement Quilt ModInitializer
 public class QuiltEntrypoint {
-    public void onInitialize() {
-        PlatformServices services = buildServices();
-        ModBootstrap.init(services);
-    }
 
-    private PlatformServices buildServices() {
-        return new PlatformServices() {
+    public QuiltEntrypoint() {
+        Path configDir = QuiltLoader.getConfigDir();
+        String mcVersion = "1.21";
+
+        List<ExternalControlHandler> handlers = List.of(
+            new JeiHandler(configDir),
+            new EmiHandler(configDir),
+            new ReiHandler(configDir)
+        );
+
+        PlatformServices services = new PlatformServices() {
             @Override
             public CommandPlatform commands() {
                 return root -> new BrigadierCommandAdapter().adapt(root);
@@ -35,29 +44,21 @@ public class QuiltEntrypoint {
 
             @Override
             public ConfigDirProvider configDir() {
-                return () -> java.nio.file.Paths.get("config");
+                return () -> configDir;
             }
 
             @Override
             public void fireKeyAction(String translationKey) {
-                // TODO: look up KeyMapping by translationKey, call KeyMapping.click()
+                // TODO: look up KeyMapping by translationKey
             }
 
             @Override
-            public String minecraftVersion() {
-                // TODO: once compiled against real MC: return net.minecraft.SharedConstants.getReleaseVersion()
-                return "1.21";
-            }
+            public String minecraftVersion() { return mcVersion; }
 
             @Override
-            public List<ExternalControlHandler> externalHandlers() {
-                java.nio.file.Path dir = configDir().getConfigDirectory();
-                return List.of(
-                    new JeiHandler(dir),
-                    new EmiHandler(dir),
-                    new ReiHandler(dir)
-                );
-            }
+            public List<ExternalControlHandler> externalHandlers() { return handlers; }
         };
+
+        ModBootstrap.init(services);
     }
 }

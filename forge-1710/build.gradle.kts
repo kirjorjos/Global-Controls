@@ -4,22 +4,25 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":loader-forge"))
     implementation(project(":common"))
     implementation(project(":platform-api"))
-    implementation(project(":platform-brigadier"))
+    implementation(project(":platform-legacy"))
+    implementation("org.spongepowered:mixin:0.7.11-SNAPSHOT")
 }
 
 repositories {
-    unimined.neoForgedMaven()
+    maven("https://mcpbot.bspk.rs/mcp")
+    unimined.spongeMaven()
 }
 
 unimined.minecraft {
-    version("1.21")
+    version("1.7.10")
     mappings {
-        mojmap()
+        mcp("snapshot", "20140925-1.7.10")
     }
-    neoForge {
-        loader("net.neoforged:neoforge:21.0.0-beta")
+    minecraftForge {
+        loader("10.13.4.1614-1.7.10")
     }
     defaultRemapJar = false
     remap(tasks.shadowJar.get())

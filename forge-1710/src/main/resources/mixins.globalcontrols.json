@@ -1,0 +1,10 @@
+{
+  "required": true,
+  "minVersion": "0.7",
+  "package": "net.globalcontrols.loader.forge.mixin",
+  "compatibilityLevel": "JAVA_6",
+  "refmap": "globalcontrols.refmap.json",
+  "client": [
+    "KeyboardInputMixin"
+  ]
+}

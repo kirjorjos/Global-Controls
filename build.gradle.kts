@@ -1,6 +1,6 @@
 plugins {
     java
-    id("xyz.wagyourtail.jvmdowngrader") version "1.3.6" apply false
+    id("xyz.wagyourtail.unimined") version "1.4.1" apply false
 }
 
 subprojects {
@@ -23,10 +23,13 @@ subprojects {
 tasks.register("buildAll") {
     description = "Build all loader variants for all Minecraft versions"
     dependsOn(
-        ":loader-forge:buildForgeAll",
-        ":loader-fabric:buildFabricAll",
-        ":loader-neoforge:buildNeoForgeAll",
-        ":loader-quilt:buildQuiltAll"
+        ":forge-1710:build",
+        ":forge-1122:build",
+        ":forge-1201:build",
+        ":fabric-1201:build",
+        ":fabric-121:build",
+        ":loader-neoforge:build",
+        ":loader-quilt:build"
     )
     group = "build"
 }

@@ -1,16 +1,16 @@
-package net.globalcontrols.loader.neoforge.mixin;
+package net.globalcontrols.loader.fabric.mixin;
 
 import net.globalcontrols.common.service.KeyInterceptorHolder;
-import net.minecraft.client.KeyboardHandler;
+import net.minecraft.client.Keyboard;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(KeyboardHandler.class)
+@Mixin(Keyboard.class)
 public class KeyboardInputMixin {
 
-    @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "onKey", at = @At("HEAD"), cancellable = true)
     private void onKeyPress(long window, int key, int scancode, int action, int modifiers, CallbackInfo ci) {
         var interceptor = KeyInterceptorHolder.get();
         if (interceptor != null) {

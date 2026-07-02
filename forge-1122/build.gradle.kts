@@ -3,23 +3,25 @@ plugins {
     id("com.gradleup.shadow") version "8.3.0"
 }
 
-dependencies {
-    implementation(project(":common"))
-    implementation(project(":platform-api"))
-    implementation(project(":platform-brigadier"))
+repositories {
+    unimined.spongeMaven()
 }
 
-repositories {
-    unimined.neoForgedMaven()
+dependencies {
+    implementation(project(":loader-forge"))
+    implementation(project(":common"))
+    implementation(project(":platform-api"))
+    implementation(project(":platform-legacy"))
+    implementation("org.spongepowered:mixin:0.8.5-SNAPSHOT")
 }
 
 unimined.minecraft {
-    version("1.21")
+    version("1.12.2")
     mappings {
-        mojmap()
+        mcp("stable", "39-1.12")
     }
-    neoForge {
-        loader("net.neoforged:neoforge:21.0.0-beta")
+    minecraftForge {
+        loader("14.23.5.2859")
     }
     defaultRemapJar = false
     remap(tasks.shadowJar.get())

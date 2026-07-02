@@ -4,22 +4,19 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":loader-fabric"))
     implementation(project(":common"))
     implementation(project(":platform-api"))
     implementation(project(":platform-brigadier"))
 }
 
-repositories {
-    unimined.neoForgedMaven()
-}
-
 unimined.minecraft {
-    version("1.21")
+    version("1.20.1")
     mappings {
-        mojmap()
+        yarn(10)
     }
-    neoForge {
-        loader("net.neoforged:neoforge:21.0.0-beta")
+    fabric {
+        loader("0.15.11")
     }
     defaultRemapJar = false
     remap(tasks.shadowJar.get())

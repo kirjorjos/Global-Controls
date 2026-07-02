@@ -1,0 +1,10 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "GPL-3.0"
+
+[[mods]]
+modId = "globalcontrols"
+version = "1.0.0"
+displayName = "GlobalControls"
+description = "Global keybind profile across modpacks"
+mixins = ["mixins.globalcontrols.json"]

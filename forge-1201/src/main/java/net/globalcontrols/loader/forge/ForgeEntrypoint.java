@@ -9,6 +9,7 @@ import net.globalcontrols.platform.brigadier.handler.JeiHandler;
 import net.globalcontrols.platform.brigadier.handler.ReiHandler;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Mod("globalcontrols")
 public class ForgeEntrypoint {
+    private final BrigadierCommandAdapter commandAdapter = new BrigadierCommandAdapter();
 
     public ForgeEntrypoint() {
         Path configDir = FMLPaths.CONFIGDIR.get();
@@ -29,16 +31,21 @@ public class ForgeEntrypoint {
         );
 
         LoaderBootstrap.init(
-            root -> new BrigadierCommandAdapter().adapt(root),
+            root -> commandAdapter.adapt(root),
             new BrigadierControlProvider(),
             new BrigadierModProvider(),
             configDir,
-            key -> {},
+            key -> BrigadierControlProvider.fireKey(key),
             mcVersion,
             handlers
         );
 
         MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        commandAdapter.register(event.getDispatcher());
     }
 
     @SubscribeEvent

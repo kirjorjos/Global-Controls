@@ -11,10 +11,16 @@ import net.globalcontrols.platform.brigadier.handler.ReiHandler;
 import org.quiltmc.loader.api.ModContainer;
 import org.quiltmc.loader.api.QuiltLoader;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class QuiltEntrypoint {
+    private static final Logger LOG = Logger.getLogger("GlobalControls");
+    private final BrigadierCommandAdapter commandAdapter = new BrigadierCommandAdapter();
 
     public QuiltEntrypoint() {
         Path configDir = QuiltLoader.getConfigDir();
@@ -29,7 +35,7 @@ public class QuiltEntrypoint {
         PlatformServices services = new PlatformServices() {
             @Override
             public CommandPlatform commands() {
-                return root -> new BrigadierCommandAdapter().adapt(root);
+                return root -> commandAdapter.adapt(root);
             }
 
             @Override
@@ -49,7 +55,7 @@ public class QuiltEntrypoint {
 
             @Override
             public void fireKeyAction(String translationKey) {
-                // TODO: look up KeyMapping by translationKey
+                BrigadierControlProvider.fireKey(translationKey);
             }
 
             @Override
@@ -60,5 +66,27 @@ public class QuiltEntrypoint {
         };
 
         ModBootstrap.init(services);
+        registerCommandsReflectively();
+    }
+
+    private void registerCommandsReflectively() {
+        try {
+            Class<?> callbackClass = Class.forName("net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback");
+            Object event = callbackClass.getDeclaredField("EVENT").get(null);
+            Method registerMethod = event.getClass().getMethod("register", Object.class);
+            Object listener = Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[]{callbackClass},
+                (proxy, method, methodArgs) -> {
+                    if ("register".equals(method.getName())) {
+                        commandAdapter.register(methodArgs[0]);
+                    }
+                    return null;
+                }
+            );
+            registerMethod.invoke(event, listener);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Could not register commands via Fabric API", e);
+        }
     }
 }

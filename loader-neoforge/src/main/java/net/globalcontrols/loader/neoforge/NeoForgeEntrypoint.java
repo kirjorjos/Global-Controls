@@ -10,16 +10,18 @@ import net.globalcontrols.platform.brigadier.handler.JeiHandler;
 import net.globalcontrols.platform.brigadier.handler.ReiHandler;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.nio.file.Path;
 import java.util.List;
 
 @Mod("globalcontrols")
 public class NeoForgeEntrypoint {
+    private final BrigadierCommandAdapter commandAdapter = new BrigadierCommandAdapter();
 
     public NeoForgeEntrypoint() {
         Path configDir = FMLPaths.CONFIGDIR.get();
-        // TODO: use SharedConstants or FMLLoader at runtime
         String mcVersion = "1.21";
 
         List<ExternalControlHandler> handlers = List.of(
@@ -31,7 +33,7 @@ public class NeoForgeEntrypoint {
         PlatformServices services = new PlatformServices() {
             @Override
             public CommandPlatform commands() {
-                return root -> new BrigadierCommandAdapter().adapt(root);
+                return root -> commandAdapter.adapt(root);
             }
 
             @Override
@@ -51,7 +53,7 @@ public class NeoForgeEntrypoint {
 
             @Override
             public void fireKeyAction(String translationKey) {
-                // TODO: look up KeyMapping by translationKey
+                BrigadierControlProvider.fireKey(translationKey);
             }
 
             @Override
@@ -62,5 +64,9 @@ public class NeoForgeEntrypoint {
         };
 
         ModBootstrap.init(services);
+
+        NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, event -> {
+            commandAdapter.register(event.getDispatcher());
+        });
     }
 }

@@ -10,10 +10,15 @@ import net.globalcontrols.platform.brigadier.handler.EmiHandler;
 import net.globalcontrols.platform.brigadier.handler.JeiHandler;
 import net.globalcontrols.platform.brigadier.handler.ReiHandler;
 
+import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class FabricEntrypoint implements ModInitializer {
+    private static final Logger LOG = Logger.getLogger("GlobalControls");
+    private final BrigadierCommandAdapter commandAdapter = new BrigadierCommandAdapter();
 
     @Override
     public void onInitialize() {
@@ -27,13 +32,35 @@ public class FabricEntrypoint implements ModInitializer {
         );
 
         LoaderBootstrap.init(
-            root -> new BrigadierCommandAdapter().adapt(root),
+            root -> commandAdapter.adapt(root),
             new BrigadierControlProvider(),
             new BrigadierModProvider(),
             configDir,
-            key -> {},
+            key -> BrigadierControlProvider.fireKey(key),
             mcVersion,
             handlers
         );
+
+        registerCommandsReflectively();
+    }
+
+    private void registerCommandsReflectively() {
+        try {
+            Class<?> callbackClass = Class.forName("net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback");
+            Object event = callbackClass.getDeclaredField("EVENT").get(null);
+            Object listener = Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[]{callbackClass},
+                (proxy, method, methodArgs) -> {
+                    if ("register".equals(method.getName())) {
+                        commandAdapter.register(methodArgs[0]);
+                    }
+                    return null;
+                }
+            );
+            event.getClass().getMethod("register", callbackClass).invoke(event, listener);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Fabric API not available, commands not registered", e);
+        }
     }
 }

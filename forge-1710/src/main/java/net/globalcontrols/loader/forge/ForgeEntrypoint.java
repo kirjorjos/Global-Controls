@@ -14,6 +14,7 @@ import java.util.List;
 
 @Mod(modid = "globalcontrols", version = "1.0.0")
 public class ForgeEntrypoint {
+    private final LegacyCommandAdapter commandAdapter = new LegacyCommandAdapter();
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -24,13 +25,15 @@ public class ForgeEntrypoint {
         handlers.add(new NeiHandler(configDir, mcVersion));
 
         LoaderBootstrap.init(
-            root -> new LegacyCommandAdapter().adapt(root),
+            root -> commandAdapter.adapt(root),
             new LegacyControlProvider(),
             new LegacyModProvider(),
             configDir,
-            key -> {},
+            key -> LegacyControlProvider.fireKey(key),
             mcVersion,
             handlers
         );
+
+        commandAdapter.register();
     }
 }

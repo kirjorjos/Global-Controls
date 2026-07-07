@@ -28,7 +28,7 @@ public class JsonConfigManager implements ConfigManager {
         try (Reader reader = Files.newBufferedReader(filePath)) {
             ConfigData data = GSON.fromJson(reader, ConfigData.class);
             return data != null ? data : ConfigData.defaults();
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             return ConfigData.defaults();
         }
     }

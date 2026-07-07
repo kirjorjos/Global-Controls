@@ -3,13 +3,12 @@ plugins {
     id("xyz.wagyourtail.unimined") version "1.4.1" apply false
 }
 
-val modVersion = "1.0.0"
+version = "1.0.0"
 
 subprojects {
     apply(plugin = "java")
 
-    group = "net.globalcontrols"
-    version = modVersion
+    group = rootProject.group
 
     java {
         toolchain {
@@ -62,10 +61,10 @@ tasks.register("collectArtifacts") {
             val sourceFile = rootProject.layout.buildDirectory
                 .dir("../$projectName")
                 .map { it.dir("build/libs") }
-                .map { it.file("$projectName-$modVersion${a["suffix"]}.jar") }
+                .map { it                .file("$projectName-$version${a["suffix"]}.jar") }
                 .get().asFile
 
-            val targetName = "GlobalControls-${a["loader"]}-${a["mc"]}-$modVersion.jar"
+            val targetName = "GlobalControls-${a["loader"]}-${a["mc"]}-$version.jar"
             val targetFile = File(dir, targetName)
 
             sourceFile.copyTo(targetFile, overwrite = true)

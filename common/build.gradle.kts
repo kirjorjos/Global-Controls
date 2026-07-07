@@ -12,3 +12,7 @@ dependencies {
 tasks.named<Test>("test") {
     useJUnitPlatform()
 }
+
+tasks.processResources {
+    expand(mapOf("version" to version))
+}

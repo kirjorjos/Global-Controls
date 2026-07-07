@@ -1,5 +1,6 @@
 package net.globalcontrols.common.config;
 
+import net.globalcontrols.common.ModVersion;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
@@ -15,7 +16,7 @@ class JsonConfigManagerTest {
         Path freshDir = tempDir.resolve("fresh");
         JsonConfigManager mgr = new JsonConfigManager(freshDir);
         ConfigData d = mgr.load();
-        assertEquals("1.0", d.version());
+        assertEquals(ModVersion.VERSION, d.version());
         assertEquals("", d.globalControlsFilePath());
         assertFalse(d.firstLaunchCompleted());
     }
@@ -43,6 +44,6 @@ class JsonConfigManagerTest {
         // Write invalid JSON
         java.nio.file.Files.writeString(mgr.configFilePath(), "not json");
         ConfigData d = mgr.load();
-        assertEquals("1.0", d.version());
+        assertEquals(ModVersion.VERSION, d.version());
     }
 }

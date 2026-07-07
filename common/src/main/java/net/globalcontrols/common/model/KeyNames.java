@@ -7,10 +7,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public final class KeyNames {
+    public static final int UNBOUND_CODE = -2;
+    public static final String UNBOUND_NAME = "Unbound";
+
     private static final Map<Integer, String> CODE_TO_NAME = new HashMap<>();
     private static final Map<String, Integer> NAME_TO_CODE = new HashMap<>();
 
     static {
+        map(-2, "Unbound");
         map(0, "MOUSE1");
         map(1, "MOUSE2");
         map(2, "MOUSE3");

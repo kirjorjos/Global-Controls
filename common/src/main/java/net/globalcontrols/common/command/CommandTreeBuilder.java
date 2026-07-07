@@ -80,7 +80,10 @@ public final class CommandTreeBuilder {
             } else {
                 Map<String, String> controls = controlService.getAllControls().stream()
                     .filter(c -> c.translationKey().startsWith("key." + modId))
-                    .collect(Collectors.toMap(c -> c.translationKey(), c -> KeyNames.formatCombo(c.glfwCodes())));
+                    .collect(Collectors.toMap(c -> c.translationKey(), c -> {
+                        String s = KeyNames.formatCombo(c.glfwCodes());
+                        return s.isEmpty() ? KeyNames.UNBOUND_NAME : s;
+                    }));
                 if (!controls.isEmpty()) data.put(modId, controls);
             }
         }
@@ -98,7 +101,10 @@ public final class CommandTreeBuilder {
         } else {
             controls = controlService.getAllControls().stream()
                 .filter(c -> c.translationKey().startsWith("key." + modId))
-                .collect(Collectors.toMap(c -> c.translationKey(), c -> KeyNames.formatCombo(c.glfwCodes())));
+                .collect(Collectors.toMap(c -> c.translationKey(), c -> {
+                    String s = KeyNames.formatCombo(c.glfwCodes());
+                    return s.isEmpty() ? KeyNames.UNBOUND_NAME : s;
+                }));
         }
         Map<String, Map<String, String>> data = profile.load();
         data.put(modId, controls);
@@ -121,6 +127,7 @@ public final class CommandTreeBuilder {
                 .map(c -> KeyNames.formatCombo(c.glfwCodes()))
                 .orElse("");
         }
+        if (combo.isEmpty()) combo = KeyNames.UNBOUND_NAME;
         Map<String, Map<String, String>> data = profile.load();
         data.computeIfAbsent(modId, k -> new HashMap<>()).put(controlId, combo);
         profile.save(data);
@@ -164,26 +171,46 @@ public final class CommandTreeBuilder {
             Map<String, Integer> parsed = new LinkedHashMap<>();
             for (Map.Entry<String, String> entry : entries.entrySet()) {
                 List<Integer> codes = KeyNames.parseCombo(entry.getValue());
-                if (!codes.isEmpty()) parsed.put(entry.getKey(), codes.get(codes.size() - 1));
+                if (isUnbound(codes)) {
+                    handler.writeControl(entry.getKey(), -1);
+                } else if (!codes.isEmpty()) {
+                    parsed.put(entry.getKey(), codes.get(codes.size() - 1));
+                }
             }
             handler.writeControls(parsed);
         } else {
             for (Map.Entry<String, String> entry : entries.entrySet()) {
                 List<Integer> codes = KeyNames.parseCombo(entry.getValue());
-                controlService.applyCombo(entry.getKey(), codes);
+                if (isUnbound(codes)) {
+                    controlService.unset(entry.getKey());
+                } else {
+                    controlService.applyCombo(entry.getKey(), codes);
+                }
             }
         }
+    }
+
+    private static boolean isUnbound(List<Integer> codes) {
+        return codes.size() == 1 && codes.get(0) == KeyNames.UNBOUND_CODE;
     }
 
     private static void applySingleBinding(String modId, String controlId, String keyName,
                                            ControlService controlService, List<ExternalControlHandler> extHandlers) {
         ExternalControlHandler handler = findHandler(extHandlers, modId);
         List<Integer> codes = KeyNames.parseCombo(keyName);
-        int mainKey = codes.isEmpty() ? -1 : codes.get(codes.size() - 1);
-        if (handler != null && mainKey >= 0) {
-            handler.writeControl(controlId, mainKey);
-        } else if (mainKey >= 0) {
-            controlService.applyCombo(controlId, codes);
+        if (isUnbound(codes)) {
+            if (handler != null) {
+                handler.writeControl(controlId, -1);
+            } else {
+                controlService.unset(controlId);
+            }
+        } else if (!codes.isEmpty()) {
+            int mainKey = codes.get(codes.size() - 1);
+            if (handler != null) {
+                handler.writeControl(controlId, mainKey);
+            } else {
+                controlService.applyCombo(controlId, codes);
+            }
         }
     }
 
@@ -192,30 +219,42 @@ public final class CommandTreeBuilder {
         String mod = args.get(0);
         String control = args.get(1);
         String key = args.size() > 2 ? args.get(2) : null;
+        ExternalControlHandler handler = findHandler(extHandlers, mod);
+
         if (key == null || key.isEmpty()) {
             profile.removeEntry(mod, control);
-            ExternalControlHandler handler = findHandler(extHandlers, mod);
             if (handler != null) {
                 handler.writeControl(control, -1);
             } else {
                 controlService.unset(control);
             }
-            LOG.info("Unset " + control + " for mod " + mod);
-        } else {
-            List<Integer> codes = KeyNames.parseCombo(key);
-            if (codes.isEmpty()) {
-                LOG.warning("Invalid key combo: " + key);
-                return;
-            }
-            profile.setEntry(mod, control, key);
-            int mainKey = codes.get(codes.size() - 1);
-            ExternalControlHandler handler = findHandler(extHandlers, mod);
-            if (handler != null) {
-                handler.writeControl(control, mainKey);
-            } else {
-                controlService.applyCombo(control, codes);
-            }
-            LOG.info("Set " + control + " for mod " + mod + " to " + key);
+            LOG.info("Unset " + control + " for mod " + mod + " — will use default on next load");
+            return;
         }
+
+        if (key.equals(KeyNames.UNBOUND_NAME)) {
+            profile.setEntry(mod, control, KeyNames.UNBOUND_NAME);
+            if (handler != null) {
+                handler.writeControl(control, -1);
+            } else {
+                controlService.unset(control);
+            }
+            LOG.info("Unbound " + control + " for mod " + mod);
+            return;
+        }
+
+        List<Integer> codes = KeyNames.parseCombo(key);
+        if (codes.isEmpty()) {
+            LOG.warning("Invalid key combo: " + key);
+            return;
+        }
+        profile.setEntry(mod, control, key);
+        int mainKey = codes.get(codes.size() - 1);
+        if (handler != null) {
+            handler.writeControl(control, mainKey);
+        } else {
+            controlService.applyCombo(control, codes);
+        }
+        LOG.info("Set " + control + " for mod " + mod + " to " + key);
     }
 }

@@ -1,0 +1,86 @@
+name: Auto-tag issues based on MC version and loader
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  tag-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Extract MC Version and Loader
+        id: extract
+        run: |
+          BODY="${{ github.event.issue.body }}"
+          
+          # Extract MC Version
+          MC_VERSION=$(echo "$BODY" | grep -oP '(?<=## MC Version[\s\S]*?Version: ?)\K[0-9.]+' | head -1)
+          if [ -z "$MC_VERSION" ]; then
+            MC_VERSION=$(echo "$BODY" | grep -oP 'MC Version.*?(?=##|$)' | grep -oE '[0-9]\.[0-9]+\.[0-9]+|[0-9]\.[0-9]+' | head -1)
+          fi
+          
+          # Extract Loader
+          LOADER=$(echo "$BODY" | grep -oP '(?<=## Loader[\s\S]*?Loader: ?)\w+' | head -1)
+          if [ -z "$LOADER" ]; then
+            LOADER=$(echo "$BODY" | grep -oiE '(Fabric|Forge|NeoForge|Quilt)' | head -1)
+          fi
+          
+          echo "mc_version=$MC_VERSION" >> $GITHUB_OUTPUT
+          echo "loader=$LOADER" >> $GITHUB_OUTPUT
+          echo "MC Version: $MC_VERSION"
+          echo "Loader: $LOADER"
+      
+      - name: Create tags array
+        id: tags
+        run: |
+          TAGS=()
+          
+          # Add MC version tags
+          if [ -n "${{ steps.extract.outputs.mc_version }}" ]; then
+            TAGS+=("mc-${{ steps.extract.outputs.mc_version }}")
+          fi
+          
+          # Add loader tags
+          if [ -n "${{ steps.extract.outputs.loader }}" ]; then
+            LOADER_LOWER=$(echo "${{ steps.extract.outputs.loader }}" | tr '[:upper:]' '[:lower:]')
+            TAGS+=("loader-$LOADER_LOWER")
+          fi
+          
+          # Convert array to JSON
+          TAGS_JSON=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
+          echo "tags=$TAGS_JSON" >> $GITHUB_OUTPUT
+          echo "Tags to add: $TAGS_JSON"
+      
+      - name: Apply tags
+        if: fromJson(steps.tags.outputs.tags) != fromJson('[]')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tags = ${{ steps.tags.outputs.tags }};
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = context.issue.number;
+            
+            // Get existing labels
+            const issue = await github.rest.issues.get({
+              owner,
+              repo,
+              issue_number
+            });
+            
+            const existingLabels = issue.data.labels.map(l => l.name);
+            const newLabels = tags.filter(tag => !existingLabels.includes(tag));
+            
+            if (newLabels.length > 0) {
+              console.log(`Adding labels: ${newLabels.join(', ')}`);
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number,
+                labels: newLabels
+              });
+            } else {
+              console.log('No new labels to add');
+            }

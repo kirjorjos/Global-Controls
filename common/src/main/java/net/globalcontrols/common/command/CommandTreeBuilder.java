@@ -54,7 +54,7 @@ public final class CommandTreeBuilder {
         ), args -> loadAllForMod(profile, controlService, externalHandlers, args));
         var load = new LiteralNode("load", List.of(loadAll, loadModBranch));
 
-        var setKeyArg = new ArgumentNode<String>("key", () -> List.of(),
+        var setKeyArg = new ArgumentNode<String>("key", () -> List.of(KeyNames.UNBOUND_NAME),
             List.of(), args -> handleSet(profile, controlService, externalHandlers, args));
         var setControlArg = new ArgumentNode<String>("control", controlSuggestions,
             List.of(setKeyArg), args -> handleSet(profile, controlService, externalHandlers, args));

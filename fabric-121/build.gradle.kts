@@ -3,6 +3,12 @@ plugins {
     id("com.gradleup.shadow") version "8.3.0"
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 dependencies {
     implementation(project(":loader-fabric"))
     implementation(project(":common"))

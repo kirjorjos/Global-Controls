@@ -3,7 +3,7 @@ plugins {
     id("xyz.wagyourtail.unimined") version "1.4.1" apply false
 }
 
-version = "1.0.0"
+version = "1.0.1"
 
 subprojects {
     apply(plugin = "java")
@@ -12,7 +12,7 @@ subprojects {
 
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
+            languageVersion.set(JavaLanguageVersion.of(17))
         }
     }
 

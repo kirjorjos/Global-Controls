@@ -4,6 +4,12 @@ plugins {
     id("xyz.wagyourtail.jvmdowngrader") version "1.3.6"
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 jvmdg.downgradeTo = JavaVersion.VERSION_1_8
 
 dependencies {

@@ -7,5 +7,5 @@ dependencies {
     implementation(project(":platform-api"))
     implementation(project(":common"))
     implementation("com.google.code.gson:gson:2.11.0")
-    compileOnly("com.mojang:brigadier:1.2.9")
+    implementation("com.mojang:brigadier:1.2.9")
 }

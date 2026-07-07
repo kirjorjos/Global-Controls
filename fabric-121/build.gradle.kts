@@ -19,10 +19,18 @@ unimined.minecraft {
         loader("0.16.0")
     }
     defaultRemapJar = false
-    remap(tasks.shadowJar.get())
 }
 
 tasks.shadowJar {
     configurations = listOf(project.configurations.runtimeClasspath.get())
     archiveClassifier.set("")
+}
+
+tasks.named("jar") {
+    dependsOn(tasks.named("shadowJar"))
+    enabled = false
+}
+
+tasks.named("assemble") {
+    dependsOn(tasks.named("shadowJar"))
 }

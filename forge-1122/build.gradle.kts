@@ -17,7 +17,6 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":loader-forge"))
     implementation(project(":common"))
     implementation(project(":platform-api"))
     implementation(project(":platform-legacy"))

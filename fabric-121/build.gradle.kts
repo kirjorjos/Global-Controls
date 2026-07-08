@@ -10,7 +10,6 @@ java {
 }
 
 dependencies {
-    implementation(project(":loader-fabric"))
     implementation(project(":common"))
     implementation(project(":platform-api"))
     implementation(project(":platform-brigadier"))
@@ -40,3 +39,6 @@ tasks.named("jar") {
 tasks.named("assemble") {
     dependsOn(tasks.named("shadowJar"))
 }
+
+
+sourceSets.main.get().java.srcDir(rootProject.file("shared/fabric/src/main/java"))

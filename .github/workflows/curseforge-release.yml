@@ -1,0 +1,94 @@
+name: Release to CurseForge
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: Release type
+        type: choice
+        options: [alpha, beta, release]
+        default: alpha
+      changelog:
+        description: Changelog (markdown)
+        type: string
+        default: ""
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'gradle'
+
+    - name: Build all modules
+      run: ./gradlew buildAll
+
+    - name: Collect distribution JARs
+      run: ./gradlew collectArtifacts
+
+    - name: Upload to CurseForge
+      env:
+        CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+        PROJECT_ID: 1591751
+        RELEASE_TYPE: ${{ inputs.release-type }}
+        CHANGELOG: ${{ inputs.changelog }}
+      run: |
+        set -e
+        for jar in build/distributions/GlobalControls-*.jar; do
+          filename=$(basename "$jar")
+          echo "Uploading $filename ..."
+
+          # Parse loader + MC version from filename:
+          #   GlobalControls-{Loader}-{MC}-{version}.jar
+          rest="${filename#GlobalControls-}"
+          rest="${rest%.jar}"
+          loader="${rest%%-*}"
+          rest="${rest#*-}"
+          mod_ver="${rest##*-}"
+          mc_ver="${rest%-*}"
+
+          # Determine Java version tag
+          case "$mc_ver" in
+            1.7.10|1.12.2|1.14.4|1.15.2|1.16.5) java_tag="Java 8" ;;
+            1.17.1|1.18.2)                        java_tag="Java 17" ;;
+            *)                                    java_tag="Java 21" ;;
+          esac
+
+          # Build metadata JSON
+          jq -n \
+            --arg changelog "$CHANGELOG" \
+            --arg releaseType "$RELEASE_TYPE" \
+            --arg displayName "$filename" \
+            --arg loader "$loader" \
+            --arg mc "$mc_ver" \
+            --arg java "$java_tag" \
+            '{
+              changelog: $changelog,
+              changelogType: "markdown",
+              displayName: $displayName,
+              gameVersionNames: [$loader, $mc, "Client", $java],
+              releaseType: $releaseType
+            }' > /tmp/metadata.json
+
+          # Upload
+          response=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            -H "X-Api-Token: $CURSEFORGE_TOKEN" \
+            -F "metadata=@/tmp/metadata.json;type=application/json" \
+            -F "file=@$jar" \
+            "https://minecraft.curseforge.com/api/projects/$PROJECT_ID/upload-file")
+
+          if [ "$response" = "200" ]; then
+            file_id=$(jq -r '.id' /tmp/response.json)
+            echo "  OK — file ID $file_id"
+          else
+            echo "  FAILED (HTTP $response):"
+            cat /tmp/response.json
+            exit 1
+          fi
+        done
+        echo "All uploads complete."

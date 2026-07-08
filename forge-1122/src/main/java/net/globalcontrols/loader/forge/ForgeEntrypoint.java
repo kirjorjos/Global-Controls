@@ -1,6 +1,7 @@
 package net.globalcontrols.loader.forge;
 
-import net.globalcontrols.platform.api.ExternalControlHandler;
+import net.globalcontrols.common.bootstrap.ModBootstrap;
+import net.globalcontrols.platform.api.*;
 import net.globalcontrols.platform.legacy.LegacyCommandAdapter;
 import net.globalcontrols.platform.legacy.LegacyControlProvider;
 import net.globalcontrols.platform.legacy.LegacyModProvider;
@@ -24,16 +25,40 @@ public class ForgeEntrypoint {
         List<ExternalControlHandler> handlers = new ArrayList<>();
         handlers.add(new NeiHandler(configDir, mcVersion));
 
-        LoaderBootstrap.init(
-            root -> commandAdapter.adapt(root),
-            new LegacyControlProvider(),
-            new LegacyModProvider(),
-            configDir,
-            key -> LegacyControlProvider.fireKey(key),
-            mcVersion,
-            handlers
-        );
+        PlatformServices services = new PlatformServices() {
+            @Override
+            public CommandPlatform commands() {
+                return root -> commandAdapter.adapt(root);
+            }
 
+            @Override
+            public ControlPlatform controls() {
+                return new LegacyControlProvider();
+            }
+
+            @Override
+            public ModPlatform mods() {
+                return new LegacyModProvider();
+            }
+
+            @Override
+            public ConfigDirProvider configDir() {
+                return () -> configDir;
+            }
+
+            @Override
+            public void fireKeyAction(String translationKey) {
+                LegacyControlProvider.fireKey(translationKey);
+            }
+
+            @Override
+            public String minecraftVersion() { return mcVersion; }
+
+            @Override
+            public List<ExternalControlHandler> externalHandlers() { return handlers; }
+        };
+
+        ModBootstrap.init(services);
         commandAdapter.register();
     }
 }

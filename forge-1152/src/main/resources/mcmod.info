@@ -1,0 +1,15 @@
+[{
+  "modid": "globalcontrols",
+  "name": "GlobalControls",
+  "description": "Global keybind profile across modpacks",
+  "version": "1.0.1",
+  "mcversion": "1.15.2",
+  "logoFile": "",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["kirjorjos"],
+  "credits": "",
+  "parent": "",
+  "screenshots": [],
+  "dependencies": []
+}]]

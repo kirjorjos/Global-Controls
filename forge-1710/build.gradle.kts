@@ -13,7 +13,6 @@ java {
 jvmdg.downgradeTo = JavaVersion.VERSION_1_8
 
 dependencies {
-    implementation(project(":loader-forge"))
     implementation(project(":common"))
     implementation(project(":platform-api"))
     implementation(project(":platform-legacy"))

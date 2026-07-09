@@ -73,21 +73,21 @@ jobs:
               displayName: $displayName,
               gameVersionNames: [$loader, $mc, "Client", $java],
               releaseType: $releaseType
-            }' > /tmp/metadata.json
+            }' > "$RUNNER_TEMP/metadata.json"
 
-          # Upload
-          response=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+          # Upload (metadata as JSON string field, not file upload)
+          response=$(curl -s -o "$RUNNER_TEMP/response.json" -w "%{http_code}" \
             -H "X-Api-Token: $CURSEFORGE_TOKEN" \
-            -F "metadata=@/tmp/metadata.json;type=application/json" \
+            -F "metadata=$(cat "$RUNNER_TEMP/metadata.json")" \
             -F "file=@$jar" \
             "https://minecraft.curseforge.com/api/projects/$PROJECT_ID/upload-file")
 
           if [ "$response" = "200" ]; then
-            file_id=$(jq -r '.id' /tmp/response.json)
+            file_id=$(jq -r '.id' "$RUNNER_TEMP/response.json")
             echo "  OK — file ID $file_id"
           else
             echo "  FAILED (HTTP $response):"
-            cat /tmp/response.json
+            cat "$RUNNER_TEMP/response.json"
             exit 1
           fi
         done

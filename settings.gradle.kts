@@ -173,7 +173,11 @@ if (!versionsFile.exists()) {
                     val mcpbot = if (entry["mcpbot"] == true)
                         "\n\nrepositories {\n    maven(\"https://mcpbot.bspk.rs/mcp\")\n}"
                     else ""
-                    val content = renderBuildGradle(entry, template, mapOf("mcpbot_repo" to mcpbot))
+                    var content = renderBuildGradle(entry, template, mapOf("mcpbot_repo" to mcpbot))
+                    val extraSource = entry["extra_source"] as? String
+                    if (extraSource != null) {
+                        content += "\nsourceSets.main.get().java.srcDir(rootProject.file(\"src/$extraSource/java\"))"
+                    }
                     writeFile(projDir.resolve("build.gradle.kts"), content)
                 }
 

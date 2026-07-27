@@ -21,69 +21,75 @@ subprojects {
     }
 }
 
+subprojects {
+    // After flattening, source dirs are at java/ and resources/ (not src/main/java/)
+    sourceSets.main.get().java.srcDir("java")
+    sourceSets.main.get().resources.srcDir("resources")
+}
+
 val artifacts = listOf(
     // Era 0 — Java 8 via downgrader
-    mapOf("module" to ":forge-1710", "suffix" to "-downgraded", "loader" to "Forge", "mc" to "1.7.10"),
-    mapOf("module" to ":forge-1122", "suffix" to "-downgraded", "loader" to "Forge", "mc" to "1.12.2"),
-    mapOf("module" to ":forge-1144", "suffix" to "-downgraded", "loader" to "Forge", "mc" to "1.14.4"),
-    mapOf("module" to ":forge-1152", "suffix" to "-downgraded", "loader" to "Forge", "mc" to "1.15.2"),
-    mapOf("module" to ":forge-1165", "suffix" to "-downgraded", "loader" to "Forge", "mc" to "1.16.5"),
-    mapOf("module" to ":fabric-1144", "suffix" to "-downgraded", "loader" to "Fabric", "mc" to "1.14.4"),
-    mapOf("module" to ":fabric-1152", "suffix" to "-downgraded", "loader" to "Fabric", "mc" to "1.15.2"),
-    mapOf("module" to ":fabric-1165", "suffix" to "-downgraded", "loader" to "Fabric", "mc" to "1.16.5"),
+    mapOf("module" to ":forge-1_7_10", "suffix" to "-downgraded", "loader" to "Forge", "mc" to "1.7.10"),
+    mapOf("module" to ":forge-1_12_2", "suffix" to "-downgraded", "loader" to "Forge", "mc" to "1.12.2"),
+    mapOf("module" to ":forge-1_14_4", "suffix" to "-downgraded", "loader" to "Forge", "mc" to "1.14.4"),
+    mapOf("module" to ":forge-1_15_2", "suffix" to "-downgraded", "loader" to "Forge", "mc" to "1.15.2"),
+    mapOf("module" to ":forge-1_16_5", "suffix" to "-downgraded", "loader" to "Forge", "mc" to "1.16.5"),
+    mapOf("module" to ":fabric-1_14_4", "suffix" to "-downgraded", "loader" to "Fabric", "mc" to "1.14.4"),
+    mapOf("module" to ":fabric-1_15_2", "suffix" to "-downgraded", "loader" to "Fabric", "mc" to "1.15.2"),
+    mapOf("module" to ":fabric-1_16_5", "suffix" to "-downgraded", "loader" to "Fabric", "mc" to "1.16.5"),
     // Era 1 — Java 17
-    mapOf("module" to ":forge-1171", "suffix" to "", "loader" to "Forge", "mc" to "1.17.1"),
-    mapOf("module" to ":forge-1182", "suffix" to "", "loader" to "Forge", "mc" to "1.18.2"),
-    mapOf("module" to ":forge-1194", "suffix" to "", "loader" to "Forge", "mc" to "1.19.4"),
-    mapOf("module" to ":forge-1201", "suffix" to "", "loader" to "Forge", "mc" to "1.20.1"),
-    mapOf("module" to ":forge-1202", "suffix" to "", "loader" to "Forge", "mc" to "1.20.2"),
-    mapOf("module" to ":forge-1204", "suffix" to "", "loader" to "Forge", "mc" to "1.20.4"),
-    mapOf("module" to ":fabric-1171", "suffix" to "", "loader" to "Fabric", "mc" to "1.17.1"),
-    mapOf("module" to ":fabric-1182", "suffix" to "", "loader" to "Fabric", "mc" to "1.18.2"),
-    mapOf("module" to ":fabric-1194", "suffix" to "", "loader" to "Fabric", "mc" to "1.19.4"),
-    mapOf("module" to ":fabric-1201", "suffix" to "", "loader" to "Fabric", "mc" to "1.20.1"),
-    mapOf("module" to ":fabric-1202", "suffix" to "", "loader" to "Fabric", "mc" to "1.20.2"),
-    mapOf("module" to ":fabric-1204", "suffix" to "", "loader" to "Fabric", "mc" to "1.20.4"),
-    mapOf("module" to ":quilt-1182", "suffix" to "", "loader" to "Quilt", "mc" to "1.18.2"),
-    mapOf("module" to ":quilt-1194", "suffix" to "", "loader" to "Quilt", "mc" to "1.19.4"),
+    mapOf("module" to ":forge-1_17_1", "suffix" to "", "loader" to "Forge", "mc" to "1.17.1"),
+    mapOf("module" to ":forge-1_18_2", "suffix" to "", "loader" to "Forge", "mc" to "1.18.2"),
+    mapOf("module" to ":forge-1_19_4", "suffix" to "", "loader" to "Forge", "mc" to "1.19.4"),
+    mapOf("module" to ":forge-1_20_1", "suffix" to "", "loader" to "Forge", "mc" to "1.20.1"),
+    mapOf("module" to ":forge-1_20_2", "suffix" to "", "loader" to "Forge", "mc" to "1.20.2"),
+    mapOf("module" to ":forge-1_20_4", "suffix" to "", "loader" to "Forge", "mc" to "1.20.4"),
+    mapOf("module" to ":fabric-1_17_1", "suffix" to "", "loader" to "Fabric", "mc" to "1.17.1"),
+    mapOf("module" to ":fabric-1_18_2", "suffix" to "", "loader" to "Fabric", "mc" to "1.18.2"),
+    mapOf("module" to ":fabric-1_19_4", "suffix" to "", "loader" to "Fabric", "mc" to "1.19.4"),
+    mapOf("module" to ":fabric-1_20_1", "suffix" to "", "loader" to "Fabric", "mc" to "1.20.1"),
+    mapOf("module" to ":fabric-1_20_2", "suffix" to "", "loader" to "Fabric", "mc" to "1.20.2"),
+    mapOf("module" to ":fabric-1_20_4", "suffix" to "", "loader" to "Fabric", "mc" to "1.20.4"),
+    mapOf("module" to ":quilt-1_18_2", "suffix" to "", "loader" to "Quilt", "mc" to "1.18.2"),
+    mapOf("module" to ":quilt-1_19_4", "suffix" to "", "loader" to "Quilt", "mc" to "1.19.4"),
     // Era 2 — Java 21
-    mapOf("module" to ":fabric-121", "suffix" to "", "loader" to "Fabric", "mc" to "1.21"),
-    mapOf("module" to ":neoforge-1202", "suffix" to "", "loader" to "NeoForge", "mc" to "1.20.2"),
-    mapOf("module" to ":neoforge-1204", "suffix" to "", "loader" to "NeoForge", "mc" to "1.20.4"),
-    mapOf("module" to ":neoforge-121", "suffix" to "", "loader" to "NeoForge", "mc" to "1.21"),
-    mapOf("module" to ":quilt-121", "suffix" to "", "loader" to "Quilt", "mc" to "1.21")
+    mapOf("module" to ":fabric-1_21", "suffix" to "", "loader" to "Fabric", "mc" to "1.21"),
+    mapOf("module" to ":neoforge-1_20_2", "suffix" to "", "loader" to "NeoForge", "mc" to "1.20.2"),
+    mapOf("module" to ":neoforge-1_20_4", "suffix" to "", "loader" to "NeoForge", "mc" to "1.20.4"),
+    mapOf("module" to ":neoforge-1_21", "suffix" to "", "loader" to "NeoForge", "mc" to "1.21"),
+    mapOf("module" to ":quilt-1_21", "suffix" to "", "loader" to "Quilt", "mc" to "1.21")
 )
 
 tasks.register("buildAll") {
     description = "Build all loader variants for all Minecraft versions"
     dependsOn(
-        ":forge-1710:build",
-        ":forge-1122:build",
-        ":forge-1144:build",
-        ":forge-1152:build",
-        ":forge-1165:build",
-        ":forge-1171:build",
-        ":forge-1182:build",
-        ":forge-1194:build",
-        ":forge-1201:build",
-        ":forge-1202:build",
-        ":forge-1204:build",
-        ":fabric-1144:build",
-        ":fabric-1152:build",
-        ":fabric-1165:build",
-        ":fabric-1171:build",
-        ":fabric-1182:build",
-        ":fabric-1194:build",
-        ":fabric-1201:build",
-        ":fabric-1202:build",
-        ":fabric-1204:build",
-        ":fabric-121:build",
-        ":quilt-1182:build",
-        ":quilt-1194:build",
-        ":quilt-121:build",
-        ":neoforge-1202:build",
-        ":neoforge-1204:build",
-        ":neoforge-121:build"
+        ":forge-1_7_10:build",
+        ":forge-1_12_2:build",
+        ":forge-1_14_4:build",
+        ":forge-1_15_2:build",
+        ":forge-1_16_5:build",
+        ":forge-1_17_1:build",
+        ":forge-1_18_2:build",
+        ":forge-1_19_4:build",
+        ":forge-1_20_1:build",
+        ":forge-1_20_2:build",
+        ":forge-1_20_4:build",
+        ":fabric-1_14_4:build",
+        ":fabric-1_15_2:build",
+        ":fabric-1_16_5:build",
+        ":fabric-1_17_1:build",
+        ":fabric-1_18_2:build",
+        ":fabric-1_19_4:build",
+        ":fabric-1_20_1:build",
+        ":fabric-1_20_2:build",
+        ":fabric-1_20_4:build",
+        ":fabric-1_21:build",
+        ":quilt-1_18_2:build",
+        ":quilt-1_19_4:build",
+        ":quilt-1_21:build",
+        ":neoforge-1_20_2:build",
+        ":neoforge-1_20_4:build",
+        ":neoforge-1_21:build"
     )
     group = "build"
 }
@@ -101,11 +107,8 @@ tasks.register("collectArtifacts") {
 
         for (a in artifacts) {
             val projectName = a["module"]!!.removePrefix(":")
-            val sourceFile = rootProject.layout.buildDirectory
-                .dir("../$projectName")
-                .map { it.dir("build/libs") }
-                .map { it.file("$projectName${a["suffix"]}.jar") }
-                .get().asFile
+            val projDir = project(":$projectName").projectDir
+            val sourceFile = projDir.resolve("build/libs/$projectName${a["suffix"]}.jar")
 
             val targetName = "GlobalControls-${a["loader"]}-${a["mc"]}-$version.jar"
             val targetFile = File(dir, targetName)

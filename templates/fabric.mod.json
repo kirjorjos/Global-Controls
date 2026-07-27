@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "globalcontrols",
+  "version": "{modVersion}",
+  "name": "GlobalControls",
+  "description": "Global keybind profile across modpacks",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      "net.globalcontrols.loader.fabric.FabricEntrypoint"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">={loader_min}",
+    "minecraft": "{mc_range}"
+  }
+}

@@ -1,5 +1,17 @@
 .gradle
 **/build/
+**/bin/
+
+# Generated per-version build files and metadata
+# Handled by generate.py from versions.json + templates/
+src/fabric/fabric-*/build.gradle.kts
+src/fabric/fabric-*/resources/*
+src/forge/forge-*/build.gradle.kts
+src/forge/forge-*/resources/*
+src/neoforge/neoforge-*/build.gradle.kts
+src/neoforge/neoforge-*/resources/*
+src/quilt/quilt-*/build.gradle.kts
+src/quilt/quilt-*/resources/*
 
 # Ignore Gradle GUI config
 gradle-app.setting

@@ -1,0 +1,37 @@
+{
+  "fabric": [
+    { "id": "fabric-1_14_4", "mc": "1.14.4", "yarn": 18, "loader": "0.15.11", "java": 21, "downgrade": true, "modVersion": "1.0.1", "shared": "fabric" },
+    { "id": "fabric-1_15_2", "mc": "1.15.2", "yarn": 17, "loader": "0.15.11", "java": 21, "downgrade": true, "modVersion": "1.0.1", "shared": "fabric" },
+    { "id": "fabric-1_16_5", "mc": "1.16.5", "yarn": 10, "loader": "0.15.11", "java": 21, "downgrade": true, "modVersion": "1.0.1", "shared": "fabric" },
+    { "id": "fabric-1_17_1", "mc": "1.17.1", "yarn": 65, "loader": "0.15.11", "java": 17, "downgrade": false, "modVersion": "1.0.1", "shared": "fabric" },
+    { "id": "fabric-1_18_2", "mc": "1.18.2", "yarn": 4, "loader": "0.15.11", "java": 17, "downgrade": false, "modVersion": "1.0.1", "shared": "fabric" },
+    { "id": "fabric-1_19_4", "mc": "1.19.4", "yarn": 2, "loader": "0.15.11", "java": 17, "downgrade": false, "modVersion": "1.0.1", "shared": "fabric" },
+    { "id": "fabric-1_20_1", "mc": "1.20.1", "yarn": 10, "loader": "0.15.11", "java": 17, "downgrade": false, "modVersion": "1.0.0", "shared": "fabric" },
+    { "id": "fabric-1_20_2", "mc": "1.20.2", "yarn": 4, "loader": "0.15.11", "java": 17, "downgrade": false, "modVersion": "1.0.0", "shared": "fabric" },
+    { "id": "fabric-1_20_4", "mc": "1.20.4", "yarn": 2, "loader": "0.15.11", "java": 17, "downgrade": false, "modVersion": "1.0.0", "shared": "fabric" },
+    { "id": "fabric-1_21", "mc": "1.21", "yarn": 9, "loader": "0.16.0", "java": 21, "downgrade": false, "modVersion": "1.0.0", "shared": "fabric" }
+  ],
+  "forge": [
+    { "id": "forge-1_7_10",  "mc": "1.7.10", "mappings_type": "mcp", "mappings_val1": "snapshot", "mappings_val2": "20140925-1.7.10", "loader": "10.13.4.1614-1.7.10", "java": 21, "downgrade": true, "modVersion": "1.0.0", "shared": "forge-legacy", "platform": "legacy", "mcmod": true, "mcpbot": true },
+    { "id": "forge-1_12_2",  "mc": "1.12.2", "mappings_type": "mcp", "mappings_val1": "stable",  "mappings_val2": "39-1.12",     "loader": "14.23.5.2859",     "java": 21, "downgrade": true, "modVersion": "1.0.0", "shared": "forge-legacy", "platform": "legacy", "mcmod": true },
+    { "id": "forge-1_14_4",  "mc": "1.14.4", "mappings_type": "mcp", "mappings_val1": "stable",  "mappings_val2": "58-1.14.4",   "loader": "28.2.30",          "java": 21, "downgrade": true, "modVersion": "1.0.1", "shared": "forge-old",    "platform": "brigadier", "mcmod": true, "mcpbot": true },
+    { "id": "forge-1_15_2",  "mc": "1.15.2", "mappings_type": "mcp", "mappings_val1": "stable",  "mappings_val2": "60-1.15",     "loader": "31.2.60",          "java": 21, "downgrade": true, "modVersion": "1.0.1", "shared": "forge-old",    "platform": "brigadier", "mcmod": true, "mcpbot": true },
+    { "id": "forge-1_16_5",  "mc": "1.16.5", "mappings_type": "mojmap", "loader": "36.2.42",     "java": 21, "downgrade": true, "modVersion": "1.0.1", "shared": "forge-new",    "platform": "brigadier" },
+    { "id": "forge-1_17_1",  "mc": "1.17.1", "mappings_type": "mojmap", "loader": "37.1.1",      "java": 17, "downgrade": false, "modVersion": "1.0.1", "shared": "forge-new",    "platform": "brigadier" },
+    { "id": "forge-1_18_2",  "mc": "1.18.2", "mappings_type": "mojmap", "loader": "40.3.12",     "java": 17, "downgrade": false, "modVersion": "1.0.1", "shared": "forge-new",    "platform": "brigadier" },
+    { "id": "forge-1_19_4",  "mc": "1.19.4", "mappings_type": "mojmap", "loader": "45.4.3",      "java": 17, "downgrade": false, "modVersion": "1.0.1", "shared": "forge-new",    "platform": "brigadier" },
+    { "id": "forge-1_20_1",  "mc": "1.20.1", "mappings_type": "mojmap", "loader": "47.2.0",      "java": 17, "downgrade": false, "modVersion": "1.0.0", "shared": "forge-new",    "platform": "brigadier" },
+    { "id": "forge-1_20_2",  "mc": "1.20.2", "mappings_type": "mojmap", "loader": "48.1.0",      "java": 17, "downgrade": false, "modVersion": "1.0.0", "shared": "forge-new",    "platform": "brigadier" },
+    { "id": "forge-1_20_4",  "mc": "1.20.4", "mappings_type": "mojmap", "loader": "49.2.7",      "java": 17, "downgrade": false, "modVersion": "1.0.0", "shared": "forge-new",    "platform": "brigadier" }
+  ],
+  "neoforge": [
+    { "id": "neoforge-1_20_2", "mc": "1.20.2", "loader": "86",                          "java": 17, "downgrade": false, "modVersion": "1.0.1", "shared": "neoforge", "neoforged_maven": false },
+    { "id": "neoforge-1_20_4", "mc": "1.20.4", "loader": "net.neoforged:neoforge:20.4.251", "java": 17, "downgrade": false, "modVersion": "1.0.1", "shared": "neoforge", "neoforged_maven": false },
+    { "id": "neoforge-1_21",   "mc": "1.21",   "loader": "net.neoforged:neoforge:21.0.0-beta", "java": 21, "downgrade": false, "modVersion": "1.0.0", "shared": "neoforge", "neoforged_maven": true }
+  ],
+  "quilt": [
+    { "id": "quilt-1_18_2", "mc": "1.18.2", "loader": "0.26.1", "java": 17, "downgrade": false, "modVersion": "1.0.1", "shared": "quilt", "quilt_maven": true },
+    { "id": "quilt-1_19_4", "mc": "1.19.4", "loader": "0.26.1", "java": 17, "downgrade": false, "modVersion": "1.0.1", "shared": "quilt", "quilt_maven": true },
+    { "id": "quilt-1_21",   "mc": "1.21",   "loader": "0.26.1", "java": 21, "downgrade": false, "modVersion": "1.0.0", "shared": "quilt", "quilt_maven": false }
+  ]
+}

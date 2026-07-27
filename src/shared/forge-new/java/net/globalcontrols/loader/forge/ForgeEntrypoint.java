@@ -23,7 +23,7 @@ public class ForgeEntrypoint {
 
     public ForgeEntrypoint() {
         Path configDir = FMLPaths.CONFIGDIR.get();
-        String mcVersion = FMLLoader.versionInfo().mcVersion();
+        String mcVersion = getMcVersion();
 
         List<ExternalControlHandler> handlers = List.of(
             new JeiHandler(configDir),
@@ -66,5 +66,23 @@ public class ForgeEntrypoint {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         commandAdapter.register(event.getDispatcher());
+    }
+
+    private static String getMcVersion() {
+        try {
+            // Forge 1.17+ exposes versionInfo(); 1.16.x has the field directly.
+            // Use reflection so this compiles against both.
+            java.lang.reflect.Method versionInfo = FMLLoader.class.getMethod("versionInfo");
+            Object info = versionInfo.invoke(null);
+            return (String) info.getClass().getMethod("mcVersion").invoke(info);
+        } catch (Exception e) {
+            try {
+                java.lang.reflect.Field f = FMLLoader.class.getDeclaredField("mcVersion");
+                f.setAccessible(true);
+                return (String) f.get(null);
+            } catch (Exception ex) {
+                return "unknown";
+            }
+        }
     }
 }

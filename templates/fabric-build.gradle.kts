@@ -23,6 +23,10 @@ unimined.minecraft {
 tasks.shadowJar {
     configurations = listOf(project.configurations.runtimeClasspath.get())
     archiveClassifier.set("")
+    // These are provided by Minecraft — don't bundle them
+    exclude("com/mojang/brigadier/**")
+    exclude("com/google/gson/**")
+    exclude("com/google/errorprone/**")
 }
 
 tasks.named("jar") {

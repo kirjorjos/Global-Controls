@@ -35,4 +35,4 @@ tasks.named("assemble") {
 }
 
 
-sourceSets.main.get().java.srcDir(rootProject.file("src/shared/forge-mid/main/java"))
+sourceSets.main.get().java.srcDir(rootProject.file("src/shared/forge-new/main/java"))

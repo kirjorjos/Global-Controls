@@ -3,7 +3,6 @@ package net.globalcontrols.common.service;
 import net.globalcontrols.common.model.GlobalBinding;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class BindingRegistry {
     private final Map<String, GlobalBinding> byKey = new LinkedHashMap<>();
@@ -28,21 +27,6 @@ public class BindingRegistry {
 
     public Collection<GlobalBinding> getAll() {
         return Collections.unmodifiableCollection(byKey.values());
-    }
-
-    public String match(Set<Integer> heldKeys) {
-        for (GlobalBinding binding : byKey.values()) {
-            if (isStrictMatch(binding.heldKeys(), heldKeys)) {
-                return binding.translationKey();
-            }
-        }
-        return null;
-    }
-
-    /** All combo keys must be held, no extras */
-    private boolean isStrictMatch(List<Integer> combo, Set<Integer> held) {
-        if (combo.size() != held.size()) return false;
-        return held.containsAll(combo);
     }
 
     private static String extractModId(String translationKey) {

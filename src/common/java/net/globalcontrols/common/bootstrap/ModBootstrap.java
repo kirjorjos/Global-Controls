@@ -9,8 +9,7 @@ import net.globalcontrols.common.config.JsonConfigManager;
 import net.globalcontrols.common.config.OsDefaults;
 import net.globalcontrols.common.service.BindingRegistry;
 import net.globalcontrols.common.service.ControlService;
-import net.globalcontrols.common.service.KeyInterceptorHolder;
-import net.globalcontrols.common.service.KeyStateTracker;
+
 import net.globalcontrols.platform.api.PlatformServices;
 import net.globalcontrols.platform.api.command.CommandDefinition;
 
@@ -44,9 +43,6 @@ public final class ModBootstrap {
 
             BindingRegistry registry = new BindingRegistry();
             ControlService controlService = new ControlService(services.controls(), registry);
-
-            KeyStateTracker tracker = new KeyStateTracker(registry, services::fireKeyAction);
-            KeyInterceptorHolder.set(tracker);
 
             CommandDefinition tree = CommandTreeBuilder.build(
                 config, controlService, services,

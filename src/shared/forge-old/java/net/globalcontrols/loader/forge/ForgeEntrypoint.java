@@ -8,9 +8,9 @@ import net.globalcontrols.platform.brigadier.BrigadierModProvider;
 import net.globalcontrols.platform.brigadier.handler.JeiHandler;
 import net.globalcontrols.platform.brigadier.handler.ReiHandler;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FMLLoader;
 
@@ -64,8 +64,8 @@ public class ForgeEntrypoint {
     }
 
     @SubscribeEvent
-    public void onRegisterCommands(RegisterCommandsEvent event) {
-        commandAdapter.register(event.getDispatcher());
+    public void onServerStarting(FMLServerStartingEvent event) {
+        commandAdapter.register(event.getCommandDispatcher());
     }
 
     private static String getMcVersion() {

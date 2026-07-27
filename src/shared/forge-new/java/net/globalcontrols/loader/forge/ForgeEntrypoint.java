@@ -10,8 +10,8 @@ import net.globalcontrols.platform.brigadier.handler.ReiHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLLoader;
 
 import java.nio.file.Path;
@@ -23,7 +23,7 @@ public class ForgeEntrypoint {
 
     public ForgeEntrypoint() {
         Path configDir = FMLPaths.CONFIGDIR.get();
-        String mcVersion = getMcVersion();
+        String mcVersion = FMLLoader.versionInfo().mcVersion();
 
         List<ExternalControlHandler> handlers = List.of(
             new JeiHandler(configDir),
@@ -66,15 +66,5 @@ public class ForgeEntrypoint {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         commandAdapter.register(event.getDispatcher());
-    }
-
-    private static String getMcVersion() {
-        try {
-            java.lang.reflect.Field f = FMLLoader.class.getDeclaredField("mcVersion");
-            f.setAccessible(true);
-            return (String) f.get(null);
-        } catch (Exception e) {
-            return "unknown";
-        }
     }
 }

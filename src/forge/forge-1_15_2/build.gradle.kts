@@ -12,14 +12,12 @@ java {
 
 repositories {
     maven("https://mcpbot.bspk.rs/mcp")
-    unimined.spongeMaven()
 }
 
 dependencies {
     implementation(project(":common"))
     implementation(project(":platform-api"))
     implementation(project(":platform-brigadier"))
-    implementation("org.spongepowered:mixin:0.8.5-SNAPSHOT")
 }
 
 unimined.minecraft {

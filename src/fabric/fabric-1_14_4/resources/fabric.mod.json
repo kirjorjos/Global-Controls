@@ -10,9 +10,6 @@
       "net.globalcontrols.loader.fabric.FabricEntrypoint"
     ]
   },
-  "mixins": [
-    "mixins.globalcontrols.json"
-  ],
   "depends": {
     "fabricloader": ">=0.15.11",
     "minecraft": ">=1.14.4 <1.15.0"

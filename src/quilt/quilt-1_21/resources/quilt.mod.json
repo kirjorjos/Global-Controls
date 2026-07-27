@@ -13,6 +13,5 @@
         "versions": ">=1.21"
       }
     ]
-  },
-  "mixin": "mixins.globalcontrols.json"
+  }
 }

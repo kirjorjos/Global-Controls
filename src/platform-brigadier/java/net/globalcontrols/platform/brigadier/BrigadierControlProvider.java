@@ -12,7 +12,6 @@ import java.util.logging.Logger;
 
 public class BrigadierControlProvider implements ControlPlatform {
     private static final Logger LOG = Logger.getLogger("GlobalControls");
-    private static final int[] MODIFIERS = {340, 341, 342, 343, 344, 345, 346, 347};
 
     @Override
     public Collection<ControlInfo> getControls() {
@@ -79,22 +78,6 @@ public class BrigadierControlProvider implements ControlPlatform {
             saveOptions(options);
         } catch (Exception e) {
             LOG.log(Level.WARNING, "Failed to unset key for " + translationKey, e);
-        }
-    }
-
-    public static void fireKey(String translationKey) {
-        try {
-            Object mc = getMinecraft();
-            if (mc == null) return;
-            Object options = getOptions(mc);
-            if (options == null) return;
-
-            Object km = findKeyMapping(options, translationKey);
-            if (km == null) return;
-
-            clickKeyMapping(km);
-        } catch (Exception e) {
-            LOG.log(Level.WARNING, "Failed to fire key action for " + translationKey, e);
         }
     }
 
@@ -281,25 +264,6 @@ public class BrigadierControlProvider implements ControlPlatform {
                 if (mc != null) {
                     mc.getClass().getMethod("saveOptions").invoke(mc);
                 }
-            } catch (Exception ignored) {}
-        } catch (Exception ignored) {}
-    }
-
-    private static void clickKeyMapping(Object keyMapping) {
-        try {
-            keyMapping.getClass().getMethod("click").invoke(keyMapping);
-        } catch (NoSuchMethodException e) {
-            try {
-                keyMapping.getClass().getMethod("press").invoke(keyMapping);
-            } catch (NoSuchMethodException e2) {
-                try {
-                    Field cf = keyMapping.getClass().getDeclaredField("clickCount");
-                    cf.setAccessible(true);
-                    cf.setInt(keyMapping, cf.getInt(keyMapping) + 1);
-                    Field df = keyMapping.getClass().getDeclaredField("isDown");
-                    df.setAccessible(true);
-                    df.setBoolean(keyMapping, true);
-                } catch (Exception ignored) {}
             } catch (Exception ignored) {}
         } catch (Exception ignored) {}
     }

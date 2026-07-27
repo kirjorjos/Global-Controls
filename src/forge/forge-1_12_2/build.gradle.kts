@@ -12,15 +12,10 @@ java {
 
 jvmdg.downgradeTo = JavaVersion.VERSION_1_8
 
-repositories {
-    unimined.spongeMaven()
-}
-
 dependencies {
     implementation(project(":common"))
     implementation(project(":platform-api"))
     implementation(project(":platform-legacy"))
-    implementation("org.spongepowered:mixin:0.8.5-SNAPSHOT")
 }
 
 unimined.minecraft {

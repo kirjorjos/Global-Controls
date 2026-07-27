@@ -1,32 +1,32 @@
-package net.globalcontrols.loader.forge;
+package net.globalcontrols.loader.neoforge;
 
 import net.globalcontrols.common.bootstrap.ModBootstrap;
 import net.globalcontrols.platform.api.*;
 import net.globalcontrols.platform.brigadier.BrigadierCommandAdapter;
 import net.globalcontrols.platform.brigadier.BrigadierControlProvider;
 import net.globalcontrols.platform.brigadier.BrigadierModProvider;
+import net.globalcontrols.platform.brigadier.handler.EmiHandler;
 import net.globalcontrols.platform.brigadier.handler.JeiHandler;
 import net.globalcontrols.platform.brigadier.handler.ReiHandler;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.loading.FMLLoader;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.nio.file.Path;
 import java.util.List;
 
 @Mod("globalcontrols")
-public class ForgeEntrypoint {
+public class NeoForgeEntrypoint {
     private final BrigadierCommandAdapter commandAdapter = new BrigadierCommandAdapter();
 
-    public ForgeEntrypoint() {
+    public NeoForgeEntrypoint() {
         Path configDir = FMLPaths.CONFIGDIR.get();
-        String mcVersion = getMcVersion();
+                String mcVersion = net.neoforged.fml.loading.FMLLoader.versionInfo().mcVersion();
 
         List<ExternalControlHandler> handlers = List.of(
             new JeiHandler(configDir),
+            new EmiHandler(configDir),
             new ReiHandler(configDir)
         );
 
@@ -60,21 +60,8 @@ public class ForgeEntrypoint {
 
         ModBootstrap.init(services);
 
-        MinecraftForge.EVENT_BUS.register(this);
-    }
-
-    @SubscribeEvent
-    public void onRegisterCommands(RegisterCommandsEvent event) {
-        commandAdapter.register(event.getDispatcher());
-    }
-
-    private static String getMcVersion() {
-        try {
-            java.lang.reflect.Field f = FMLLoader.class.getDeclaredField("mcVersion");
-            f.setAccessible(true);
-            return (String) f.get(null);
-        } catch (Exception e) {
-            return "unknown";
-        }
+        NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, event -> {
+            commandAdapter.register(event.getDispatcher());
+        });
     }
 }

@@ -16,12 +16,10 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":platform-api"))
     implementation(project(":platform-legacy"))
-    implementation("org.spongepowered:mixin:0.7.11-SNAPSHOT")
 }
 
 repositories {
     maven("https://mcpbot.bspk.rs/mcp")
-    unimined.spongeMaven()
 }
 
 unimined.minecraft {

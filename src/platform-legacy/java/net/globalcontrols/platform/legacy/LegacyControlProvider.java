@@ -86,22 +86,6 @@ public class LegacyControlProvider implements ControlPlatform {
         }
     }
 
-    public static void fireKey(String translationKey) {
-        try {
-            Object mc = getMinecraft();
-            if (mc == null) return;
-            Object gs = getGameSettings(mc);
-            if (gs == null) return;
-
-            Object kb = findKeyBinding(gs, translationKey);
-            if (kb == null) return;
-
-            clickKeyBinding(kb);
-        } catch (Exception e) {
-            LOG.log(Level.WARNING, "Failed to fire key action for " + translationKey, e);
-        }
-    }
-
     private static Object getMinecraft() {
         try {
             return Class.forName("net.minecraft.client.Minecraft")
@@ -191,22 +175,6 @@ public class LegacyControlProvider implements ControlPlatform {
         try {
             Class<?> kbClass = Class.forName("net.minecraft.client.settings.KeyBinding");
             kbClass.getMethod("resetKeyBindingArrayAndHash").invoke(null);
-        } catch (Exception ignored) {}
-    }
-
-    private static void clickKeyBinding(Object keyBinding) {
-        try {
-            keyBinding.getClass().getMethod("press").invoke(keyBinding);
-        } catch (NoSuchMethodException e) {
-            try {
-                keyBinding.getClass().getMethod("click").invoke(keyBinding);
-            } catch (NoSuchMethodException e2) {
-                try {
-                    Field pt = keyBinding.getClass().getDeclaredField("pressTime");
-                    pt.setAccessible(true);
-                    pt.setInt(keyBinding, pt.getInt(keyBinding) + 1);
-                } catch (Exception ignored) {}
-            } catch (Exception ignored) {}
         } catch (Exception ignored) {}
     }
 

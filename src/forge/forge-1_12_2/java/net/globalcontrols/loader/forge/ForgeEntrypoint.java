@@ -47,11 +47,6 @@ public class ForgeEntrypoint {
             }
 
             @Override
-            public void fireKeyAction(String translationKey) {
-                LegacyControlProvider.fireKey(translationKey);
-            }
-
-            @Override
             public String minecraftVersion() { return mcVersion; }
 
             @Override

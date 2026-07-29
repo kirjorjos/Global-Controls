@@ -21,10 +21,6 @@ on:
         description: Upload to Modrinth
         type: boolean
         default: true
-      changelog:
-        description: Changelog (markdown)
-        type: string
-        default: ""
 
 jobs:
   release:
@@ -40,6 +36,19 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: 'gradle'
+
+    - name: Read CHANGELOG.md from main
+      id: changelog
+      run: |
+        if [ -f CHANGELOG.md ] && [ -s CHANGELOG.md ]; then
+          echo "changelog<<CHANGELOG_EOF" >> "$GITHUB_OUTPUT"
+          cat CHANGELOG.md >> "$GITHUB_OUTPUT"
+          echo "CHANGELOG_EOF" >> "$GITHUB_OUTPUT"
+          echo "Read changelog ($(wc -c < CHANGELOG.md) bytes)"
+        else
+          echo "changelog=" >> "$GITHUB_OUTPUT"
+          echo "CHANGELOG.md is empty or missing — no changelog will be sent"
+        fi
 
     - name: Bump version
       id: version
@@ -89,7 +98,7 @@ jobs:
         curseforge-id: 1591751
         curseforge-token: ${{ inputs.deploy-to-curseforge && secrets.CURSEFORGE_API_TOKEN || '' }}
         version-type: ${{ inputs.release-type }}
-        changelog: ${{ inputs.changelog }}
+        changelog: ${{ steps.changelog.outputs.changelog }}
         game-version-filter: releases
 
     - name: Create CHANGELOG.md, commit, push branch, and create PR

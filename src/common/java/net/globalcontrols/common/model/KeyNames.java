@@ -1,6 +1,8 @@
 package net.globalcontrols.common.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,8 @@ import java.util.stream.Collectors;
 public final class KeyNames {
     public static final int UNBOUND_CODE = -2;
     public static final String UNBOUND_NAME = "Unbound";
+
+    private static List<String> cachedKeySuggestions;
 
     private static final Map<Integer, String> CODE_TO_NAME = new HashMap<>();
     private static final Map<String, Integer> NAME_TO_CODE = new HashMap<>();
@@ -157,6 +161,62 @@ public final class KeyNames {
             if (isModifier(code)) return code;
         }
         return -1;
+    }
+
+    /**
+     * Returns a cached list of all named key suggestions, including:
+     * <ul>
+     *   <li>Every single named key (A, B, ..., SPACE, ESC, ...)</li>
+     *   <li>Every combination of modifiers with every named key (LCTRL+A, LSHIFT+LCTRL+B, ...)</li>
+     *   <li>Unbound</li>
+     * </ul>
+     * Built once and cached.
+     */
+    public static List<String> getKeySuggestions() {
+        if (cachedKeySuggestions == null) {
+            cachedKeySuggestions = buildKeySuggestions();
+        }
+        return Collections.unmodifiableList(cachedKeySuggestions);
+    }
+
+    private static List<String> buildKeySuggestions() {
+        List<String> result = new ArrayList<>();
+        result.add(UNBOUND_NAME);
+
+        // Partition mapped names into modifiers and non-modifiers
+        List<String> modifiers = new ArrayList<>();
+        List<String> nonModifiers = new ArrayList<>();
+        for (Map.Entry<Integer, String> entry : CODE_TO_NAME.entrySet()) {
+            int code = entry.getKey();
+            if (code == UNBOUND_CODE) continue;
+            String name = entry.getValue();
+            if (isModifier(code)) {
+                modifiers.add(name);
+            } else {
+                nonModifiers.add(name);
+            }
+        }
+
+        // Every subset of modifiers (including empty) × every non-modifier key
+        int modCount = modifiers.size();
+        for (int mask = 0; mask < (1 << modCount); mask++) {
+            // Build modifier prefix for this mask
+            StringBuilder prefix = new StringBuilder();
+            for (int i = 0; i < modCount; i++) {
+                if ((mask & (1 << i)) != 0) {
+                    if (prefix.length() > 0) prefix.append('+');
+                    prefix.append(modifiers.get(i));
+                }
+            }
+            if (prefix.length() > 0) prefix.append('+');
+            String prefixStr = prefix.toString();
+
+            for (String key : nonModifiers) {
+                result.add(prefixStr + key);
+            }
+        }
+
+        return result;
     }
 
     private KeyNames() {}

@@ -33,7 +33,6 @@ public final class CommandTreeBuilder {
         List<ExternalControlHandler> externalHandlers = services.externalHandlers();
         Supplier<List<String>> allModIds = () -> services.mods().getInstalledMods().stream()
             .map(InstalledMod::id).toList();
-
         var pushAll = new LiteralNode("all", List.of(),
             args -> pushAllMods(profile, controlService, externalHandlers, allModIds));
         var pushControlArg = new ArgumentNode<String>("control", controlSuggestions,
@@ -54,7 +53,7 @@ public final class CommandTreeBuilder {
         ), args -> loadAllForMod(profile, controlService, externalHandlers, args));
         var load = new LiteralNode("load", List.of(loadAll, loadModBranch));
 
-        var setKeyArg = new ArgumentNode<String>("key", () -> List.of(KeyNames.UNBOUND_NAME),
+        var setKeyArg = new ArgumentNode<String>("key", KeyNames::getKeySuggestions,
             List.of(), args -> handleSet(profile, controlService, externalHandlers, args));
         var setControlArg = new ArgumentNode<String>("control", controlSuggestions,
             List.of(setKeyArg), args -> handleSet(profile, controlService, externalHandlers, args));

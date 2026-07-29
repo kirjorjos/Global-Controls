@@ -14,6 +14,7 @@ import net.globalcontrols.platform.api.command.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class BrigadierCommandAdapter {
     private CommandDefinition root;
@@ -61,7 +62,12 @@ public class BrigadierCommandAdapter {
         List<String> suggestions = node.suggestions().get();
         if (!suggestions.isEmpty()) {
             SuggestionProvider<S> provider = (ctx, sb) -> {
-                for (String s : suggestions) sb.suggest(s);
+                String remaining = sb.getRemainingLowerCase();
+                for (String s : suggestions) {
+                    if (s.toLowerCase(Locale.ROOT).startsWith(remaining)) {
+                        sb.suggest(s);
+                    }
+                }
                 return sb.buildFuture();
             };
             builder = builder.suggests(provider);

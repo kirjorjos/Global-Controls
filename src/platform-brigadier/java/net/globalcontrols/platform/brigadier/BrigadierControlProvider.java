@@ -31,7 +31,8 @@ public class BrigadierControlProvider implements ControlPlatform {
                     if (name == null) continue;
                     int code = getKeyCode(km);
                     String category = getCategory(km);
-                    controls.add(new ControlInfo(name, name, category, code >= 0 ? List.of(code) : List.of()));
+                    String displayName = getDisplayName(name);
+                    controls.add(new ControlInfo(name, displayName, category, code >= 0 ? List.of(code) : List.of()));
                 } catch (Exception ignored) {}
             }
         } catch (Exception e) {
@@ -141,6 +142,17 @@ public class BrigadierControlProvider implements ControlPlatform {
             } catch (Exception ignored) {}
         } catch (Exception ignored) {}
         return "";
+    }
+
+    /** Translate a key binding's translation key (e.g. "key.forward") to its display name using I18n. */
+    private static String getDisplayName(String translationKey) {
+        try {
+            Class<?> i18nClass = Class.forName("net.minecraft.client.resources.language.I18n");
+            String result = (String) i18nClass.getMethod("get", String.class).invoke(null, translationKey);
+            return result != null ? result : translationKey;
+        } catch (Exception e) {
+            return translationKey;
+        }
     }
 
     private static String getName(Object keyMapping) {

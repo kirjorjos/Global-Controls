@@ -96,7 +96,16 @@ class CommandTreeBuilderTest {
             @Override
             public CommandPlatform commands() { return null; }
             @Override
-            public ControlPlatform controls() { return null; }
+            public ControlPlatform controls() {
+                return new ControlPlatform() {
+                    @Override
+                    public Collection<ControlInfo> getControls() { return List.copyOf(registeredControls); }
+                    @Override
+                    public void setKey(String translationKey, List<Integer> codes) {}
+                    @Override
+                    public void unsetKey(String translationKey) {}
+                };
+            }
             @Override
             public ModPlatform mods() {
                 return () -> List.of(new InstalledMod("minecraft", "Minecraft"), new InstalledMod("jei", "JEI"));

@@ -8,6 +8,19 @@ on:
         type: choice
         options: [alpha, beta, release]
         default: alpha
+      bump-type:
+        description: Version bump type
+        type: choice
+        options: [major, minor, patch, skip]
+        default: minor
+      deploy-to-curseforge:
+        description: Upload to CurseForge
+        type: boolean
+        default: true
+      deploy-to-modrinth:
+        description: Upload to Modrinth
+        type: boolean
+        default: true
       changelog:
         description: Changelog (markdown)
         type: string
@@ -16,6 +29,9 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
     - uses: actions/checkout@v4
 
@@ -25,147 +41,84 @@ jobs:
         distribution: 'temurin'
         cache: 'gradle'
 
+    - name: Bump version
+      id: version
+      run: |
+        BUMP_TYPE="${{ inputs.bump-type }}"
+
+        CURRENT_VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' build.gradle.kts)
+        echo "Current version: $CURRENT_VERSION"
+
+        if [ "$BUMP_TYPE" = "skip" ]; then
+          echo "new_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Skipping version bump (stays $CURRENT_VERSION)"
+          exit 0
+        fi
+
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+
+        case "$BUMP_TYPE" in
+          major) major=$((major + 1)); minor=0; patch=0 ;;
+          minor) minor=$((minor + 1)); patch=0 ;;
+          patch) patch=$((patch + 1)) ;;
+        esac
+
+        NEW_VERSION="${major}.${minor}.${patch}"
+
+        # Update root build.gradle.kts
+        sed -i "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" build.gradle.kts
+
+        # Update ALL modVersion entries in versions.json (regardless of current value)
+        sed -i 's/"modVersion"[[:space:]]*:[[:space:]]*"[^"]*"/"modVersion": "'"$NEW_VERSION"'"/g' versions.json
+
+        echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+        echo "Version bumped to $NEW_VERSION"
+
     - name: Build all modules
       run: ./gradlew buildAll
 
     - name: Collect distribution JARs
       run: ./gradlew collectArtifacts
 
-    - name: Upload to CurseForge
+    - name: Publish to CurseForge & Modrinth
+      uses: Kira-NT/mc-publish@v3
+      with:
+        files: build/distributions/GlobalControls-*.jar
+        modrinth-id: ZHOPaj3I
+        modrinth-token: ${{ inputs.deploy-to-modrinth && secrets.MODRINTH_TOKEN || '' }}
+        curseforge-id: 1591751
+        curseforge-token: ${{ inputs.deploy-to-curseforge && secrets.CURSEFORGE_API_TOKEN || '' }}
+        version-type: ${{ inputs.release-type }}
+        changelog: ${{ inputs.changelog }}
+        game-version-filter: releases
+
+    - name: Create CHANGELOG.md, commit, push branch, and create PR
+      if: ${{ inputs.bump-type != 'skip' }}
       env:
-        CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
-        PROJECT_ID: 1591751
-        RELEASE_TYPE: ${{ inputs.release-type }}
-        CHANGELOG: ${{ inputs.changelog }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        set -e
-        for jar in build/distributions/GlobalControls-*.jar; do
-          filename=$(basename "$jar")
-          echo "Uploading $filename to CurseForge ..."
+        NEW_VERSION="${{ steps.version.outputs.new_version }}"
 
-          # Parse loader + MC version from filename:
-          #   GlobalControls-{Loader}-{MC}-{version}.jar
-          rest="${filename#GlobalControls-}"
-          rest="${rest%.jar}"
-          loader="${rest%%-*}"
-          rest="${rest#*-}"
-          mod_ver="${rest##*-}"
-          mc_ver="${rest%-*}"
+        # Create/empty CHANGELOG.md
+        > CHANGELOG.md
 
-          # Determine Java version tag
-          case "$mc_ver" in
-            1.7.10|1.12.2|1.14.4|1.15.2|1.16.5) java_tag="Java 8" ;;
-            1.17.1|1.18.2)                        java_tag="Java 17" ;;
-            *)                                    java_tag="Java 21" ;;
-          esac
+        # Configure git
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Build metadata JSON
-          jq -n \
-            --arg changelog "$CHANGELOG" \
-            --arg releaseType "$RELEASE_TYPE" \
-            --arg displayName "$filename" \
-            --arg loader "$loader" \
-            --arg mc "$mc_ver" \
-            --arg java "$java_tag" \
-            '{
-              changelog: $changelog,
-              changelogType: "markdown",
-              displayName: $displayName,
-              gameVersionNames: [$loader, $mc, "Client", $java],
-              releaseType: $releaseType
-            }' > "$RUNNER_TEMP/cf_metadata.json"
+        # Stage and commit
+        git add build.gradle.kts versions.json CHANGELOG.md
+        git commit -m "chore: Post-deployment cleanup"
 
-          # Upload (metadata as JSON string field, not file upload)
-          response=$(curl -s -o "$RUNNER_TEMP/response.json" -w "%{http_code}" \
-            -H "X-Api-Token: $CURSEFORGE_TOKEN" \
-            -F "metadata=$(cat "$RUNNER_TEMP/cf_metadata.json")" \
-            -F "file=@$jar" \
-            "https://minecraft.curseforge.com/api/projects/$PROJECT_ID/upload-file")
+        # Push to a release branch
+        BRANCH="release/v${NEW_VERSION}"
+        git push origin "HEAD:${BRANCH}"
 
-          if [ "$response" = "200" ]; then
-            file_id=$(jq -r '.id' "$RUNNER_TEMP/response.json")
-            echo "  [OK] CurseForge file ID $file_id"
-          else
-            echo "  [FAILED] (HTTP $response):"
-            cat "$RUNNER_TEMP/response.json"
-            exit 1
-          fi
-        done
-        echo "All CurseForge uploads complete."
+        # Create PR
+        gh pr create \
+          --title "chore: Post-deployment cleanup" \
+          --body "Auto-generated cleanup PR for version $NEW_VERSION." \
+          --base main \
+          --head "$BRANCH"
 
-    - name: Upload to Modrinth
-      env:
-        MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-        PROJECT_ID: ZHOPaj3I
-        RELEASE_TYPE: ${{ inputs.release-type }}
-        CHANGELOG: ${{ inputs.changelog }}
-      run: |
-        set -e
-        for jar in build/distributions/GlobalControls-*.jar; do
-          filename=$(basename "$jar")
-          echo "Uploading $filename to Modrinth ..."
-
-          # Parse loader + MC version from filename:
-          #   GlobalControls-{Loader}-{MC}-{version}.jar
-          rest="${filename#GlobalControls-}"
-          rest="${rest%.jar}"
-          loader="${rest%%-*}"
-          rest="${rest#*-}"
-          mod_ver="${rest##*-}"
-          mc_ver="${rest%-*}"
-
-          # Map loader name to Modrinth lowercase format
-          case "$loader" in
-            Forge)    mr_loader="forge" ;;
-            Fabric)   mr_loader="fabric" ;;
-            Quilt)    mr_loader="quilt" ;;
-            NeoForge) mr_loader="neoforge" ;;
-            *)
-              echo "  [SKIP] Unknown loader '$loader'"
-              continue
-              ;;
-          esac
-
-          # Clean display name, e.g. "Forge 1.20.1 v1.0.1"
-          version_name="${loader} ${mc_ver} v${mod_ver}"
-
-          # Build metadata JSON
-          jq -n \
-            --arg name "$version_name" \
-            --arg version_number "$mod_ver" \
-            --arg project_id "$PROJECT_ID" \
-            --arg changelog "$CHANGELOG" \
-            --arg releaseType "$RELEASE_TYPE" \
-            --arg mc "$mc_ver" \
-            --arg loader "$mr_loader" \
-            '{
-              project_id: $project_id,
-              name: $name,
-              version_number: $version_number,
-              changelog: $changelog,
-              dependencies: [],
-              game_versions: [$mc],
-              version_type: $releaseType,
-              loaders: [$loader],
-              featured: false,
-              file_parts: ["jar"],
-              primary_file: "jar"
-            }' > "$RUNNER_TEMP/mr_metadata.json"
-
-          # Upload via Modrinth API v2
-          response=$(curl -s -o "$RUNNER_TEMP/response.json" -w "%{http_code}" \
-            -H "Authorization: $MODRINTH_TOKEN" \
-            -F "data=$(cat "$RUNNER_TEMP/mr_metadata.json")" \
-            -F "jar=@$jar" \
-            "https://api.modrinth.com/v2/version")
-
-          if [ "$response" = "200" ]; then
-            version_id=$(jq -r '.id' "$RUNNER_TEMP/response.json")
-            echo "  [OK] Modrinth version ID $version_id"
-          else
-            echo "  [FAILED] (HTTP $response):"
-            cat "$RUNNER_TEMP/response.json"
-            exit 1
-          fi
-        done
-        echo "All Modrinth uploads complete."
+        echo "Created PR from branch $BRANCH"

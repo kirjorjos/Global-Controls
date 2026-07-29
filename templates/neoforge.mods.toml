@@ -1,0 +1,9 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "GPL-3.0"
+
+[[mods]]
+modId = "globalcontrols"
+version = "{modVersion}"
+displayName = "GlobalControls"
+description = "Global keybind profile across modpacks"

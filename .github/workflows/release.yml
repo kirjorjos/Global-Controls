@@ -94,7 +94,7 @@ jobs:
       with:
         files: build/distributions/GlobalControls-*.jar
         modrinth-id: ZHOPaj3I
-        modrinth-token: ${{ inputs.deploy-to-modrinth && secrets.MODRINTH_TOKEN || '' }}
+        modrinth-token: ${{ inputs.deploy-to-modrinth && secrets.MODRINTH_API_TOKEN || '' }}
         curseforge-id: 1591751
         curseforge-token: ${{ inputs.deploy-to-curseforge && secrets.CURSEFORGE_API_TOKEN || '' }}
         version-type: ${{ inputs.release-type }}

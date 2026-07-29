@@ -1,0 +1,171 @@
+name: Release to CurseForge & Modrinth
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: Release type
+        type: choice
+        options: [alpha, beta, release]
+        default: alpha
+      changelog:
+        description: Changelog (markdown)
+        type: string
+        default: ""
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'gradle'
+
+    - name: Build all modules
+      run: ./gradlew buildAll
+
+    - name: Collect distribution JARs
+      run: ./gradlew collectArtifacts
+
+    - name: Upload to CurseForge
+      env:
+        CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+        PROJECT_ID: 1591751
+        RELEASE_TYPE: ${{ inputs.release-type }}
+        CHANGELOG: ${{ inputs.changelog }}
+      run: |
+        set -e
+        for jar in build/distributions/GlobalControls-*.jar; do
+          filename=$(basename "$jar")
+          echo "Uploading $filename to CurseForge ..."
+
+          # Parse loader + MC version from filename:
+          #   GlobalControls-{Loader}-{MC}-{version}.jar
+          rest="${filename#GlobalControls-}"
+          rest="${rest%.jar}"
+          loader="${rest%%-*}"
+          rest="${rest#*-}"
+          mod_ver="${rest##*-}"
+          mc_ver="${rest%-*}"
+
+          # Determine Java version tag
+          case "$mc_ver" in
+            1.7.10|1.12.2|1.14.4|1.15.2|1.16.5) java_tag="Java 8" ;;
+            1.17.1|1.18.2)                        java_tag="Java 17" ;;
+            *)                                    java_tag="Java 21" ;;
+          esac
+
+          # Build metadata JSON
+          jq -n \
+            --arg changelog "$CHANGELOG" \
+            --arg releaseType "$RELEASE_TYPE" \
+            --arg displayName "$filename" \
+            --arg loader "$loader" \
+            --arg mc "$mc_ver" \
+            --arg java "$java_tag" \
+            '{
+              changelog: $changelog,
+              changelogType: "markdown",
+              displayName: $displayName,
+              gameVersionNames: [$loader, $mc, "Client", $java],
+              releaseType: $releaseType
+            }' > "$RUNNER_TEMP/cf_metadata.json"
+
+          # Upload (metadata as JSON string field, not file upload)
+          response=$(curl -s -o "$RUNNER_TEMP/response.json" -w "%{http_code}" \
+            -H "X-Api-Token: $CURSEFORGE_TOKEN" \
+            -F "metadata=$(cat "$RUNNER_TEMP/cf_metadata.json")" \
+            -F "file=@$jar" \
+            "https://minecraft.curseforge.com/api/projects/$PROJECT_ID/upload-file")
+
+          if [ "$response" = "200" ]; then
+            file_id=$(jq -r '.id' "$RUNNER_TEMP/response.json")
+            echo "  [OK] CurseForge file ID $file_id"
+          else
+            echo "  [FAILED] (HTTP $response):"
+            cat "$RUNNER_TEMP/response.json"
+            exit 1
+          fi
+        done
+        echo "All CurseForge uploads complete."
+
+    - name: Upload to Modrinth
+      env:
+        MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        PROJECT_ID: ZHOPaj3I
+        RELEASE_TYPE: ${{ inputs.release-type }}
+        CHANGELOG: ${{ inputs.changelog }}
+      run: |
+        set -e
+        for jar in build/distributions/GlobalControls-*.jar; do
+          filename=$(basename "$jar")
+          echo "Uploading $filename to Modrinth ..."
+
+          # Parse loader + MC version from filename:
+          #   GlobalControls-{Loader}-{MC}-{version}.jar
+          rest="${filename#GlobalControls-}"
+          rest="${rest%.jar}"
+          loader="${rest%%-*}"
+          rest="${rest#*-}"
+          mod_ver="${rest##*-}"
+          mc_ver="${rest%-*}"
+
+          # Map loader name to Modrinth lowercase format
+          case "$loader" in
+            Forge)    mr_loader="forge" ;;
+            Fabric)   mr_loader="fabric" ;;
+            Quilt)    mr_loader="quilt" ;;
+            NeoForge) mr_loader="neoforge" ;;
+            *)
+              echo "  [SKIP] Unknown loader '$loader'"
+              continue
+              ;;
+          esac
+
+          # Clean display name, e.g. "Forge 1.20.1 v1.0.1"
+          version_name="${loader} ${mc_ver} v${mod_ver}"
+
+          # Build metadata JSON
+          jq -n \
+            --arg name "$version_name" \
+            --arg version_number "$mod_ver" \
+            --arg project_id "$PROJECT_ID" \
+            --arg changelog "$CHANGELOG" \
+            --arg releaseType "$RELEASE_TYPE" \
+            --arg mc "$mc_ver" \
+            --arg loader "$mr_loader" \
+            '{
+              project_id: $project_id,
+              name: $name,
+              version_number: $version_number,
+              changelog: $changelog,
+              dependencies: [],
+              game_versions: [$mc],
+              version_type: $releaseType,
+              loaders: [$loader],
+              featured: false,
+              file_parts: ["jar"],
+              primary_file: "jar"
+            }' > "$RUNNER_TEMP/mr_metadata.json"
+
+          # Upload via Modrinth API v2
+          response=$(curl -s -o "$RUNNER_TEMP/response.json" -w "%{http_code}" \
+            -H "Authorization: $MODRINTH_TOKEN" \
+            -F "data=$(cat "$RUNNER_TEMP/mr_metadata.json")" \
+            -F "jar=@$jar" \
+            "https://api.modrinth.com/v2/version")
+
+          if [ "$response" = "200" ]; then
+            version_id=$(jq -r '.id' "$RUNNER_TEMP/response.json")
+            echo "  [OK] Modrinth version ID $version_id"
+          else
+            echo "  [FAILED] (HTTP $response):"
+            cat "$RUNNER_TEMP/response.json"
+            exit 1
+          fi
+        done
+        echo "All Modrinth uploads complete."
